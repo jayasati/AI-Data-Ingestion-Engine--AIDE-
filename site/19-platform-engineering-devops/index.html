@@ -1,0 +1,2633 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Architecture documentation for an AI-powered data-ingestion platform that extracts CRM lead data from arbitrary CSV formats using LLMs.">
+      
+      
+      
+      
+        <link rel="prev" href="../18-quality-engineering/">
+      
+      
+        <link rel="next" href="../20-future-evolution/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>19. Platform Engineering, DevOps & Production Deployment - AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#chapter-19-platform-engineering-devops-production-deployment" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="AI Data Ingestion Engine (AIDE) — Architecture &amp; Engineering Handbook" class="md-header__button md-logo" aria-label="AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              19. Platform Engineering, DevOps & Production Deployment
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="AI Data Ingestion Engine (AIDE) — Architecture &amp; Engineering Handbook" class="md-nav__button md-logo" aria-label="AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part I — Foundations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part I — Foundations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-assignment-specification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1. Assignment Specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-solution-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2. Solution Analysis & Design Approach
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-engineering-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3. Engineering Roadmap & Methodology
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-pipeline-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4. The Pipeline Architecture Mindset
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part II — System & Application Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part II — System & Application Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-system-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    5. Product Thinking & System Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-frontend-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6. Frontend Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-backend-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    7. Backend Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part III — The Data Pipeline
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part III — The Data Pipeline
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-csv-processing-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    8. CSV Processing Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-data-normalization-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    9. Data Normalization Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part IV — The AI Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part IV — The AI Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-ai-extraction-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10. AI Extraction Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-prompt-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    11. Prompt Engineering & Semantic Intelligence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-semantic-intelligence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    12. Semantic Intelligence & Prompt Orchestration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../13-validation-trust-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    13. Validation, Business Rules & Trust Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part V — Running at Scale
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part V — Running at Scale
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../14-execution-orchestration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    14. Execution Engine, Orchestration & Concurrency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../15-observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    15. Observability, Telemetry & Operational Intelligence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-reliability-resilience/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    16. Reliability, Resilience & Fault Tolerance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-security-ai-safety/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    17. Security, Privacy & AI Safety
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part VI — Delivery & Evolution
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part VI — Delivery & Evolution
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../18-quality-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    18. Quality Engineering, Testing & Continuous Verification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    19. Platform Engineering, DevOps & Production Deployment
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    19. Platform Engineering, DevOps & Production Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-what-is-platform-engineering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. What is Platform Engineering?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-production-platform-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Production Platform Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-environment-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Environment Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-environment-isolation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Environment Isolation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-infrastructure-layers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Infrastructure Layers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-containerization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Containerization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-immutable-deployments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Immutable Deployments
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-cicd-philosophy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. CI/CD Philosophy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-build-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Build Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-artifact-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Artifact Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-infrastructure-as-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Infrastructure as Code
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-configuration-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Configuration Management
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-secrets-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Secrets Management
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-deployment-strategies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Deployment Strategies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14. Deployment Strategies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rolling-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rolling Deployment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blue-green-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blue-Green Deployment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#canary-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Canary Deployment
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-rollback-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. Rollback Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-scalability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. Scalability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-stateless-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. Stateless Services
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18-storage-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. Storage Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19-queue-based-evolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. Queue-Based Evolution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#20-auto-scaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20. Auto Scaling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#21-disaster-recovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21. Disaster Recovery
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-backup-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22. Backup Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-operational-runbooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23. Operational Runbooks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#24-platform-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24. Platform Metrics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#25-release-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25. Release Management
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#26-feature-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26. Feature Flags
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#27-operational-dashboard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        27. Operational Dashboard
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#28-platform-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28. Platform Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#29-engineering-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        29. Engineering Decisions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#30-production-enhancement-beyond-the-assignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        30. Production Enhancement Beyond the Assignment
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="30. Production Enhancement Beyond the Assignment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ai-platform-control-plane" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AI Platform Control Plane
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#31-platform-maturity-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        31. Platform Maturity Model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-status-after-this-chapter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture Status After This Chapter
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Tasks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-chapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Chapters
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../20-future-evolution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    20. Future Evolution & Platform Vision
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-what-is-platform-engineering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. What is Platform Engineering?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-production-platform-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Production Platform Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-environment-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Environment Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-environment-isolation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Environment Isolation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-infrastructure-layers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Infrastructure Layers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-containerization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Containerization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-immutable-deployments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Immutable Deployments
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-cicd-philosophy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. CI/CD Philosophy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-build-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Build Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-artifact-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Artifact Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-infrastructure-as-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Infrastructure as Code
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-configuration-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Configuration Management
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-secrets-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Secrets Management
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-deployment-strategies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Deployment Strategies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="14. Deployment Strategies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rolling-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rolling Deployment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#blue-green-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blue-Green Deployment
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#canary-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Canary Deployment
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-rollback-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. Rollback Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-scalability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. Scalability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-stateless-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. Stateless Services
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18-storage-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. Storage Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19-queue-based-evolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. Queue-Based Evolution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#20-auto-scaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20. Auto Scaling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#21-disaster-recovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21. Disaster Recovery
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-backup-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22. Backup Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-operational-runbooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23. Operational Runbooks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#24-platform-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24. Platform Metrics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#25-release-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25. Release Management
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#26-feature-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26. Feature Flags
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#27-operational-dashboard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        27. Operational Dashboard
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#28-platform-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28. Platform Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#29-engineering-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        29. Engineering Decisions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#30-production-enhancement-beyond-the-assignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        30. Production Enhancement Beyond the Assignment
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="30. Production Enhancement Beyond the Assignment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ai-platform-control-plane" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AI Platform Control Plane
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#31-platform-maturity-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        31. Platform Maturity Model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-status-after-this-chapter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture Status After This Chapter
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Tasks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-chapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Chapters
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="chapter-19-platform-engineering-devops-production-deployment">Chapter 19 — Platform Engineering, DevOps &amp; Production Deployment<a class="headerlink" href="#chapter-19-platform-engineering-devops-production-deployment" title="Permanent link">&para;</a></h1>
+<p>This chapter marks the final transition from <strong>Software Engineering</strong> to <strong>Platform Engineering</strong>. The preceding chapters built an excellent application; this one answers a different question:</p>
+<blockquote>
+<p><strong>How do we deploy, operate, scale, and evolve this application in production?</strong></p>
+<p><strong>Goal:</strong> Transform the AI CSV Importer into a production-ready cloud platform with automated deployment, scalable infrastructure, disaster recovery, environment isolation, and operational excellence.</p>
+<p><strong>Core Principle:</strong> <strong>Applications solve business problems. Platforms enable applications to evolve safely.</strong></p>
+</blockquote>
+<hr />
+<h2 id="1-what-is-platform-engineering">1. What is Platform Engineering?<a class="headerlink" href="#1-what-is-platform-engineering" title="Permanent link">&para;</a></h2>
+<p>A naive view of deployment looks like this:</p>
+<div class="highlight"><pre><span></span><code>git push → Vercel
+</code></pre></div>
+<p>Production deployment is much more:</p>
+<div class="highlight"><pre><span></span><code>Developer → CI/CD → Infrastructure → Deployment → Monitoring → Rollback → Operations
+</code></pre></div>
+<p>Deployment is an ecosystem.</p>
+<hr />
+<h2 id="2-production-platform-architecture">2. Production Platform Architecture<a class="headerlink" href="#2-production-platform-architecture" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>flowchart TD
+    A[Developer] --&gt; B[Git Repository]
+    B --&gt; C["CI/CD Pipeline"]
+    C --&gt; D[Artifact Repository]
+    D --&gt; E[Container Orchestrator]
+    E --&gt; F[Production Environment]
+    F --&gt; G[Monitoring &amp; Operations]</code></pre>
+<p>Notice: developers never deploy manually.</p>
+<hr />
+<h2 id="3-environment-strategy">3. Environment Strategy<a class="headerlink" href="#3-environment-strategy" title="Permanent link">&para;</a></h2>
+<p>Never use a single environment. Instead, promote through a chain:</p>
+<div class="highlight"><pre><span></span><code>Development → Testing → Staging → Production
+</code></pre></div>
+<p>Each environment has different:</p>
+<ul>
+<li>secrets</li>
+<li>AI keys</li>
+<li>logging</li>
+<li>limits</li>
+<li>monitoring</li>
+</ul>
+<hr />
+<h2 id="4-environment-isolation">4. Environment Isolation<a class="headerlink" href="#4-environment-isolation" title="Permanent link">&para;</a></h2>
+<p>Each environment should be isolated.</p>
+<p>Development:</p>
+<div class="highlight"><pre><span></span><code>Fake Data → Cheap AI → Verbose Logs
+</code></pre></div>
+<p>Production:</p>
+<div class="highlight"><pre><span></span><code>Real Data → Production AI → Secure Logs
+</code></pre></div>
+<p>Never mix them.</p>
+<hr />
+<h2 id="5-infrastructure-layers">5. Infrastructure Layers<a class="headerlink" href="#5-infrastructure-layers" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>Frontend → API → Execution Workers → Storage → Monitoring → Secrets → Networking
+</code></pre></div>
+<p>Each layer can scale independently.</p>
+<hr />
+<h2 id="6-containerization">6. Containerization<a class="headerlink" href="#6-containerization" title="Permanent link">&para;</a></h2>
+<p>Every component becomes an independent container:</p>
+<div class="highlight"><pre><span></span><code>Next.js      → Container
+Express API  → Container
+Worker       → Container
+</code></pre></div>
+<p>Containers provide:</p>
+<ul>
+<li>portability</li>
+<li>reproducibility</li>
+<li>consistency</li>
+</ul>
+<hr />
+<h2 id="7-immutable-deployments">7. Immutable Deployments<a class="headerlink" href="#7-immutable-deployments" title="Permanent link">&para;</a></h2>
+<p>Never modify running servers. Instead:</p>
+<div class="highlight"><pre><span></span><code>Old Version → New Container → Traffic Switch → Delete Old
+</code></pre></div>
+<p>Deployments become predictable.</p>
+<hr />
+<h2 id="8-cicd-philosophy">8. CI/CD Philosophy<a class="headerlink" href="#8-cicd-philosophy" title="Permanent link">&para;</a></h2>
+<p>Every commit should automatically verify quality.</p>
+<p>Pipeline:</p>
+<div class="highlight"><pre><span></span><code>Commit → Build → Test → Security Scan → Package → Deploy
+</code></pre></div>
+<p>No manual deployments.</p>
+<hr />
+<h2 id="9-build-pipeline">9. Build Pipeline<a class="headerlink" href="#9-build-pipeline" title="Permanent link">&para;</a></h2>
+<p>A production build should include:</p>
+<pre class="mermaid"><code>flowchart TD
+    A[Type Checking] --&gt; B[Linting]
+    B --&gt; C[Unit Tests]
+    C --&gt; D[Integration Tests]
+    D --&gt; E[AI Evaluation]
+    E --&gt; F[Security Scan]
+    F --&gt; G[Docker Build]</code></pre>
+<p>Failure anywhere stops the deployment. The AI Evaluation stage runs the evaluation harness described in <a href="../18-quality-engineering/">Chapter 18 — Quality Engineering, Testing &amp; Continuous Verification</a>.</p>
+<hr />
+<h2 id="10-artifact-strategy">10. Artifact Strategy<a class="headerlink" href="#10-artifact-strategy" title="Permanent link">&para;</a></h2>
+<p>Build once. Deploy many.</p>
+<div class="highlight"><pre><span></span><code>Source Code → Build → Artifact → Development → Staging → Production
+</code></pre></div>
+<p>Never rebuild between environments.</p>
+<hr />
+<h2 id="11-infrastructure-as-code">11. Infrastructure as Code<a class="headerlink" href="#11-infrastructure-as-code" title="Permanent link">&para;</a></h2>
+<p>Infrastructure should live in version control.</p>
+<p>Not:</p>
+<div class="highlight"><pre><span></span><code>Manual Server Setup
+</code></pre></div>
+<p>Instead:</p>
+<div class="highlight"><pre><span></span><code>Infrastructure Definition → Version Control → Provision → Consistent Infrastructure
+</code></pre></div>
+<p>Servers become reproducible.</p>
+<hr />
+<h2 id="12-configuration-management">12. Configuration Management<a class="headerlink" href="#12-configuration-management" title="Permanent link">&para;</a></h2>
+<p>Separate code from configuration.</p>
+<div class="highlight"><pre><span></span><code>Application → Configuration → Environment Variables → Secrets
+</code></pre></div>
+<p>Same code. Different environments.</p>
+<hr />
+<h2 id="13-secrets-management">13. Secrets Management<a class="headerlink" href="#13-secrets-management" title="Permanent link">&para;</a></h2>
+<p>Never expose:</p>
+<ul>
+<li>API Keys</li>
+<li>Database Passwords</li>
+<li>AI Tokens</li>
+<li>JWT Secrets</li>
+</ul>
+<p>The runtime retrieves secrets securely. Developers never hardcode credentials. (See <a href="../17-security-ai-safety/">Chapter 17 — Security, Privacy &amp; AI Safety</a> for the broader security model.)</p>
+<hr />
+<h2 id="14-deployment-strategies">14. Deployment Strategies<a class="headerlink" href="#14-deployment-strategies" title="Permanent link">&para;</a></h2>
+<p>Several deployment patterns exist.</p>
+<h3 id="rolling-deployment">Rolling Deployment<a class="headerlink" href="#rolling-deployment" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>Server 1 → Update → Server 2 → Update
+</code></pre></div>
+<p>Minimal downtime.</p>
+<h3 id="blue-green-deployment">Blue-Green Deployment<a class="headerlink" href="#blue-green-deployment" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>Blue (Running) | Green (New) → Switch Traffic
+</code></pre></div>
+<p>Instant rollback.</p>
+<h3 id="canary-deployment">Canary Deployment<a class="headerlink" href="#canary-deployment" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>5% Traffic → Monitor → 25% → 50% → 100%
+</code></pre></div>
+<p>Safest production rollout.</p>
+<hr />
+<h2 id="15-rollback-strategy">15. Rollback Strategy<a class="headerlink" href="#15-rollback-strategy" title="Permanent link">&para;</a></h2>
+<p>Deployment failed? Never panic.</p>
+<div class="highlight"><pre><span></span><code>Current → Rollback → Previous Stable Version
+</code></pre></div>
+<p>Rollback must be automatic.</p>
+<hr />
+<h2 id="16-scalability">16. Scalability<a class="headerlink" href="#16-scalability" title="Permanent link">&para;</a></h2>
+<p>Separate scaling dimensions:</p>
+<div class="highlight"><pre><span></span><code>Frontend → Horizontal
+API      → Horizontal
+Workers  → Horizontal
+AI       → External
+</code></pre></div>
+<p>Every subsystem scales independently.</p>
+<hr />
+<h2 id="17-stateless-services">17. Stateless Services<a class="headerlink" href="#17-stateless-services" title="Permanent link">&para;</a></h2>
+<p>The API should remain stateless:</p>
+<div class="highlight"><pre><span></span><code>Request → Any Instance → Response
+</code></pre></div>
+<p>State belongs in:</p>
+<ul>
+<li>storage</li>
+<li>queues</li>
+<li>caches</li>
+</ul>
+<p>Not application memory.</p>
+<hr />
+<h2 id="18-storage-strategy">18. Storage Strategy<a class="headerlink" href="#18-storage-strategy" title="Permanent link">&para;</a></h2>
+<p>Different data deserves different storage.</p>
+<table>
+<thead>
+<tr>
+<th>Data</th>
+<th>Storage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Temporary Uploads</td>
+<td>Temporary filesystem/object storage</td>
+</tr>
+<tr>
+<td>Import Metadata</td>
+<td>Database</td>
+</tr>
+<tr>
+<td>Logs</td>
+<td>Log backend</td>
+</tr>
+<tr>
+<td>Metrics</td>
+<td>Time-series storage</td>
+</tr>
+<tr>
+<td>Cached AI Results</td>
+<td>Cache</td>
+</tr>
+<tr>
+<td>Audit Trails</td>
+<td>Persistent database</td>
+</tr>
+</tbody>
+</table>
+<p>One storage system should not serve every purpose.</p>
+<hr />
+<h2 id="19-queue-based-evolution">19. Queue-Based Evolution<a class="headerlink" href="#19-queue-based-evolution" title="Permanent link">&para;</a></h2>
+<p>The current architecture:</p>
+<div class="highlight"><pre><span></span><code>Client → API → AI → Response
+</code></pre></div>
+<p>Future:</p>
+<div class="highlight"><pre><span></span><code>Client → API → Queue → Worker Cluster → Result Store → Notification
+</code></pre></div>
+<p>The platform architecture remains unchanged. This evolution path builds on the execution model in <a href="../14-execution-orchestration/">Chapter 14 — Execution Engine, Orchestration &amp; Concurrency</a>.</p>
+<hr />
+<h2 id="20-auto-scaling">20. Auto Scaling<a class="headerlink" href="#20-auto-scaling" title="Permanent link">&para;</a></h2>
+<p>Monitor:</p>
+<div class="highlight"><pre><span></span><code>Queue Length → Worker Count → Scale Up
+</code></pre></div>
+<p>Later:</p>
+<div class="highlight"><pre><span></span><code>Queue Empty → Scale Down
+</code></pre></div>
+<p>Infrastructure adapts automatically.</p>
+<hr />
+<h2 id="21-disaster-recovery">21. Disaster Recovery<a class="headerlink" href="#21-disaster-recovery" title="Permanent link">&para;</a></h2>
+<p>Ask: "What if production disappears?"</p>
+<p>We need:</p>
+<ul>
+<li>backups</li>
+<li>recovery plan</li>
+<li>redeployment strategy</li>
+<li>configuration recovery</li>
+</ul>
+<p>Recovery procedures should be documented and tested.</p>
+<hr />
+<h2 id="22-backup-strategy">22. Backup Strategy<a class="headerlink" href="#22-backup-strategy" title="Permanent link">&para;</a></h2>
+<p>Back up:</p>
+<ul>
+<li>configuration</li>
+<li>metadata</li>
+<li>audit records</li>
+<li>prompt registry</li>
+<li>evaluation datasets</li>
+</ul>
+<p>Temporary uploads generally don't require long-term backups.</p>
+<hr />
+<h2 id="23-operational-runbooks">23. Operational Runbooks<a class="headerlink" href="#23-operational-runbooks" title="Permanent link">&para;</a></h2>
+<p>Every production issue should have documentation.</p>
+<p>Examples:</p>
+<div class="highlight"><pre><span></span><code>AI Provider Down   → Runbook
+Deployment Failed  → Runbook
+High Memory        → Runbook
+</code></pre></div>
+<p>Operators shouldn't invent recovery steps during incidents.</p>
+<hr />
+<h2 id="24-platform-metrics">24. Platform Metrics<a class="headerlink" href="#24-platform-metrics" title="Permanent link">&para;</a></h2>
+<p>Measure platform health:</p>
+<div class="highlight"><pre><span></span><code>Deployment Frequency → Rollback Rate → Availability → Recovery Time → Queue Length → Worker Utilization
+</code></pre></div>
+<p>Platform engineering is measurable. These metrics extend the observability stack from <a href="../15-observability/">Chapter 15 — Observability, Telemetry &amp; Operational Intelligence</a>.</p>
+<hr />
+<h2 id="25-release-management">25. Release Management<a class="headerlink" href="#25-release-management" title="Permanent link">&para;</a></h2>
+<p>Every deployment gets:</p>
+<div class="highlight"><pre><span></span><code>Version → Build Number → Prompt Version → Model Version → Migration Version
+</code></pre></div>
+<p>Complete traceability.</p>
+<hr />
+<h2 id="26-feature-flags">26. Feature Flags<a class="headerlink" href="#26-feature-flags" title="Permanent link">&para;</a></h2>
+<p>Don't deploy unfinished features. Deploy them hidden, then enable later.</p>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><code>Semantic Memory: OFF → Testing → ON
+</code></pre></div>
+<p>Safer than long-lived branches.</p>
+<hr />
+<h2 id="27-operational-dashboard">27. Operational Dashboard<a class="headerlink" href="#27-operational-dashboard" title="Permanent link">&para;</a></h2>
+<p>The platform dashboard shows:</p>
+<div class="highlight"><pre><span></span><code>Deployments | Workers | Queue | Errors | Latency | AI Cost | CPU | Memory | Availability
+</code></pre></div>
+<p>Everything operators need.</p>
+<hr />
+<h2 id="28-platform-architecture">28. Platform Architecture<a class="headerlink" href="#28-platform-architecture" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>flowchart TD
+    A[Developers] --&gt; B[Git Repository]
+    B --&gt; C["CI/CD Pipeline"]
+    C --&gt; D[Build Artifacts]
+    D --&gt; E[Container Platform]
+    E --&gt; F[Production Environment]
+    F --&gt; G[Frontend]
+    F --&gt; H[API]
+    F --&gt; I[Worker Pool]
+    G --&gt; J[Storage + Monitoring]
+    H --&gt; J
+    I --&gt; J</code></pre>
+<p>Platform concerns remain separate from business logic.</p>
+<hr />
+<h2 id="29-engineering-decisions">29. Engineering Decisions<a class="headerlink" href="#29-engineering-decisions" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Multi-environment deployment</td>
+<td>Safe promotion to production</td>
+</tr>
+<tr>
+<td>Containerization</td>
+<td>Consistent runtime behavior</td>
+</tr>
+<tr>
+<td>Build once, deploy many</td>
+<td>Identical artifacts across environments</td>
+</tr>
+<tr>
+<td>Infrastructure as Code</td>
+<td>Repeatable infrastructure</td>
+</tr>
+<tr>
+<td>Blue-Green / Canary deployments</td>
+<td>Reduced deployment risk</td>
+</tr>
+<tr>
+<td>Stateless services</td>
+<td>Easy horizontal scaling</td>
+</tr>
+<tr>
+<td>Queue-ready architecture</td>
+<td>Future asynchronous processing</td>
+</tr>
+<tr>
+<td>Feature flags</td>
+<td>Safe incremental releases</td>
+</tr>
+<tr>
+<td>Runbooks</td>
+<td>Faster incident response</td>
+</tr>
+<tr>
+<td>Automated rollback</td>
+<td>Minimize production downtime</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="30-production-enhancement-beyond-the-assignment">30. Production Enhancement Beyond the Assignment<a class="headerlink" href="#30-production-enhancement-beyond-the-assignment" title="Permanent link">&para;</a></h2>
+<p>This is the capability that makes the project resemble an internal AI platform.</p>
+<h3 id="ai-platform-control-plane">AI Platform Control Plane<a class="headerlink" href="#ai-platform-control-plane" title="Permanent link">&para;</a></h3>
+<p>Instead of deploying only application code, introduce a <strong>control plane</strong> responsible for managing AI behavior.</p>
+<pre class="mermaid"><code>flowchart TD
+    A[Platform Control Plane] --&gt; B[Prompt Registry]
+    A --&gt; C[Model Registry]
+    A --&gt; D[Feature Flags]
+    B --&gt; E[Configuration Manager]
+    C --&gt; E
+    D --&gt; E
+    E --&gt; F[Runtime AI Platform]</code></pre>
+<p>Responsibilities:</p>
+<ul>
+<li>Switch AI providers without redeploying.</li>
+<li>Roll back prompt versions independently of application releases.</li>
+<li>Gradually enable new AI features.</li>
+<li>Configure model routing.</li>
+<li>Manage operational policies.</li>
+</ul>
+<p>This decouples <strong>AI evolution</strong> from <strong>application deployment</strong>, allowing prompt and model improvements to be released independently.</p>
+<hr />
+<h2 id="31-platform-maturity-model">31. Platform Maturity Model<a class="headerlink" href="#31-platform-maturity-model" title="Permanent link">&para;</a></h2>
+<p>At the end of this chapter, the platform has evolved into a complete production system:</p>
+<div class="highlight"><pre><span></span><code>┌──────────────────────────────────────────────┐
+│            Application Layer                 │
+├──────────────────────────────────────────────┤
+│          Execution Platform                  │
+├──────────────────────────────────────────────┤
+│         AI Intelligence Platform             │
+├──────────────────────────────────────────────┤
+│          Trust &amp; Validation                  │
+├──────────────────────────────────────────────┤
+│     Observability &amp; Operations               │
+├──────────────────────────────────────────────┤
+│       Reliability &amp; Recovery                 │
+├──────────────────────────────────────────────┤
+│      Security &amp; Governance                   │
+├──────────────────────────────────────────────┤
+│      Continuous Quality Platform             │
+├──────────────────────────────────────────────┤
+│      Deployment &amp; Infrastructure             │
+└──────────────────────────────────────────────┘
+</code></pre></div>
+<hr />
+<h2 id="architecture-status-after-this-chapter">Architecture Status After This Chapter<a class="headerlink" href="#architecture-status-after-this-chapter" title="Permanent link">&para;</a></h2>
+<p>The result is a <strong>production-grade AI platform architecture</strong> composed of <strong>nine engineering layers</strong>:</p>
+<div class="highlight"><pre><span></span><code>┌──────────────────────────────────────────────┐
+│          Presentation Layer                  │
+├──────────────────────────────────────────────┤
+│            Execution Layer                   │
+├──────────────────────────────────────────────┤
+│          Intelligence Layer                  │
+├──────────────────────────────────────────────┤
+│             Trust Layer                      │
+├──────────────────────────────────────────────┤
+│      Operational Intelligence Layer          │
+├──────────────────────────────────────────────┤
+│      Reliability &amp; Resilience Layer          │
+├──────────────────────────────────────────────┤
+│      Security, Privacy &amp; AI Safety Layer     │
+├──────────────────────────────────────────────┤
+│      Quality Engineering Layer               │
+├──────────────────────────────────────────────┤
+│   Platform Engineering &amp; Infrastructure      │
+└──────────────────────────────────────────────┘
+</code></pre></div>
+<p>At this stage, the design has gone well beyond the original assignment: not just a CSV importer, but a <strong>deployable AI ingestion platform</strong> that addresses architecture, operations, resilience, testing, security, and deployment.</p>
+<p>The story does not end at deployment. The next stage covers <strong>Product Thinking &amp; Evolution Strategy</strong> — the AI roadmap (OCR, Excel, PDF, CRM connectors), plugin architecture, multi-tenant design, billing and usage metering, API versioning, workflow automation, human-in-the-loop review, knowledge base integration, multi-agent orchestration, and long-term platform evolution over the next 2–3 years. That stage answers not just <strong>"How do we build it?"</strong>, but <strong>"How does this become a real product?"</strong> — see <a href="../20-future-evolution/">Chapter 20 — Future Evolution &amp; Platform Vision</a>.</p>
+<hr />
+<h2 id="implementation-tasks">Implementation Tasks<a class="headerlink" href="#implementation-tasks" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[ ] <strong>Task 19.1 — Multi-environment deployment strategy.</strong> Define the Development → Testing → Staging → Production promotion chain with per-environment secrets, AI keys, logging, limits, and monitoring.</li>
+<li>[ ] <strong>Task 19.2 — Environment isolation.</strong> Isolate environments so development (fake data, cheap AI, verbose logs) never mixes with production (real data, production AI, secure logs).</li>
+<li>[ ] <strong>Task 19.3 — Containerized architecture.</strong> Package the frontend, API, and workers as independent containers for portability, reproducibility, and consistency.</li>
+<li>[ ] <strong>Task 19.4 — CI/CD pipeline.</strong> Automate Commit → Build → Test → Security Scan → Package → Deploy so no deployment is manual.</li>
+<li>[ ] <strong>Task 19.5 — Build pipeline.</strong> Implement the full build gate: type checking, linting, unit tests, integration tests, AI evaluation, security scan, and Docker build, with failure anywhere stopping deployment.</li>
+<li>[ ] <strong>Task 19.6 — Artifact management.</strong> Build once and deploy the identical artifact to development, staging, and production; never rebuild between environments.</li>
+<li>[ ] <strong>Task 19.7 — Infrastructure as Code.</strong> Keep infrastructure definitions in version control and provision environments reproducibly.</li>
+<li>[ ] <strong>Task 19.8 — Configuration management.</strong> Separate code from configuration via environment variables and externalized settings.</li>
+<li>[ ] <strong>Task 19.9 — Secrets management.</strong> Retrieve API keys, database passwords, AI tokens, and JWT secrets securely at runtime; never hardcode credentials.</li>
+<li>[ ] <strong>Task 19.10 — Deployment strategies.</strong> Support Rolling, Blue-Green, and Canary deployment patterns for progressively safer rollouts.</li>
+<li>[ ] <strong>Task 19.11 — Automated rollback.</strong> Make rollback to the previous stable version automatic on deployment failure.</li>
+<li>[ ] <strong>Task 19.12 — Stateless service architecture.</strong> Keep API instances stateless, with state held in storage, queues, and caches.</li>
+<li>[ ] <strong>Task 19.13 — Storage strategy.</strong> Map each data class (uploads, metadata, logs, metrics, AI cache, audit trails) to its appropriate storage backend.</li>
+<li>[ ] <strong>Task 19.14 — Queue-ready evolution path.</strong> Design the API so the synchronous flow can evolve into Queue → Worker Cluster → Result Store → Notification without architectural change.</li>
+<li>[ ] <strong>Task 19.15 — Auto scaling.</strong> Scale workers up on queue length and down when the queue empties.</li>
+<li>[ ] <strong>Task 19.16 — Disaster recovery planning.</strong> Document and test backups, recovery plans, redeployment strategy, and configuration recovery.</li>
+<li>[ ] <strong>Task 19.17 — Backup strategy.</strong> Back up configuration, metadata, audit records, the prompt registry, and evaluation datasets (temporary uploads excluded).</li>
+<li>[ ] <strong>Task 19.18 — Operational runbooks.</strong> Write runbooks for known incident classes (AI provider down, deployment failed, high memory) so operators never improvise recovery.</li>
+<li>[ ] <strong>Task 19.19 — Platform metrics.</strong> Track deployment frequency, rollback rate, availability, recovery time, queue length, and worker utilization.</li>
+<li>[ ] <strong>Task 19.20 — Release management and feature flags.</strong> Version every deployment (build, prompt, model, migration versions) and ship unfinished features behind flags enabled later.</li>
+<li>[ ] <strong>Task 19.21 — AI Platform Control Plane.</strong> Build the control plane (prompt registry, model registry, feature flags, configuration manager) that decouples AI evolution from application deployment.</li>
+</ul>
+<hr />
+<h2 id="related-chapters">Related Chapters<a class="headerlink" href="#related-chapters" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../14-execution-orchestration/">Chapter 14 — Execution Engine, Orchestration &amp; Concurrency</a> — the worker and execution model that the queue-based evolution path and auto scaling build on</li>
+<li><a href="../15-observability/">Chapter 15 — Observability, Telemetry &amp; Operational Intelligence</a> — the telemetry stack that platform metrics and the operational dashboard extend</li>
+<li><a href="../16-reliability-resilience/">Chapter 16 — Reliability, Resilience &amp; Fault Tolerance</a> — failure handling that disaster recovery and rollback strategies depend on</li>
+<li><a href="../18-quality-engineering/">Chapter 18 — Quality Engineering, Testing &amp; Continuous Verification</a> — the test and AI-evaluation gates embedded in the CI/CD build pipeline</li>
+<li><a href="../20-future-evolution/">Chapter 20 — Future Evolution &amp; Platform Vision</a> — the product-evolution roadmap that follows production deployment</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "toc.follow", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

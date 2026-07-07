@@ -1,0 +1,2428 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Architecture documentation for an AI-powered data-ingestion platform that extracts CRM lead data from arbitrary CSV formats using LLMs.">
+      
+      
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../02-solution-analysis/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>1. Assignment Specification - AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#chapter-1-assignment-specification" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="AI Data Ingestion Engine (AIDE) — Architecture &amp; Engineering Handbook" class="md-header__button md-logo" aria-label="AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              1. Assignment Specification
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="AI Data Ingestion Engine (AIDE) — Architecture &amp; Engineering Handbook" class="md-nav__button md-logo" aria-label="AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part I — Foundations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part I — Foundations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1. Assignment Specification
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1. Assignment Specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-objective" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Objective
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Objective">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-example-input-variations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Example Input Variations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-functional-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Functional Requirements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Functional Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-frontend-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Frontend Requirements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 Frontend Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-upload-csv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1 — Upload CSV
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-preview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2 — Preview
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-confirm-import" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3 — Confirm Import
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-display-parsed-result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4 — Display Parsed Result
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-backend-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Backend Requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-required-crm-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Required CRM Fields
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Required CRM Fields">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-sample-crm-records" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Sample CRM Records
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-ai-extraction-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. AI Extraction Rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. AI Extraction Rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-allowed-crm-status-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Allowed CRM Status Values
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-allowed-data-source-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Allowed Data Source Values
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-date-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Date Format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-crm-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 CRM Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-multiple-emails-or-mobile-numbers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 Multiple Emails or Mobile Numbers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#56-csv-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.6 CSV Compatibility
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#57-skip-invalid-records" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.7 Skip Invalid Records
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-evaluation-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Evaluation Criteria
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Evaluation Criteria">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-ai-prompt-engineering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 AI Prompt Engineering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-backend-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Backend Quality
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-frontend-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Frontend Quality
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-code-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 Code Quality
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#65-overall-engineering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.5 Overall Engineering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#66-bonus-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.6 Bonus Points
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-tech-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Tech Stack
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-submission-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Submission Requirements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. Submission Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-final-submission-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 Final Submission Checklist
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-chapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Chapters
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-solution-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2. Solution Analysis & Design Approach
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-engineering-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3. Engineering Roadmap & Methodology
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-pipeline-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4. The Pipeline Architecture Mindset
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part II — System & Application Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part II — System & Application Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-system-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    5. Product Thinking & System Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-frontend-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6. Frontend Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-backend-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    7. Backend Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part III — The Data Pipeline
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part III — The Data Pipeline
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-csv-processing-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    8. CSV Processing Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-data-normalization-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    9. Data Normalization Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part IV — The AI Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part IV — The AI Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-ai-extraction-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10. AI Extraction Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-prompt-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    11. Prompt Engineering & Semantic Intelligence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-semantic-intelligence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    12. Semantic Intelligence & Prompt Orchestration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../13-validation-trust-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    13. Validation, Business Rules & Trust Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part V — Running at Scale
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part V — Running at Scale
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../14-execution-orchestration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    14. Execution Engine, Orchestration & Concurrency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../15-observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    15. Observability, Telemetry & Operational Intelligence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-reliability-resilience/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    16. Reliability, Resilience & Fault Tolerance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-security-ai-safety/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    17. Security, Privacy & AI Safety
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part VI — Delivery & Evolution
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part VI — Delivery & Evolution
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../18-quality-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    18. Quality Engineering, Testing & Continuous Verification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../19-platform-engineering-devops/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    19. Platform Engineering, DevOps & Production Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../20-future-evolution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    20. Future Evolution & Platform Vision
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-objective" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Objective
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Objective">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-example-input-variations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 Example Input Variations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-functional-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Functional Requirements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Functional Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-frontend-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Frontend Requirements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.1 Frontend Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-1-upload-csv" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1 — Upload CSV
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-2-preview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2 — Preview
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-3-confirm-import" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3 — Confirm Import
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-4-display-parsed-result" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4 — Display Parsed Result
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-backend-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Backend Requirements
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-required-crm-fields" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Required CRM Fields
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Required CRM Fields">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-sample-crm-records" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Sample CRM Records
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-ai-extraction-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. AI Extraction Rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. AI Extraction Rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-allowed-crm-status-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Allowed CRM Status Values
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-allowed-data-source-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Allowed Data Source Values
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-date-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 Date Format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-crm-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 CRM Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#55-multiple-emails-or-mobile-numbers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.5 Multiple Emails or Mobile Numbers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#56-csv-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.6 CSV Compatibility
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#57-skip-invalid-records" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.7 Skip Invalid Records
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-evaluation-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Evaluation Criteria
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Evaluation Criteria">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-ai-prompt-engineering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 AI Prompt Engineering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-backend-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Backend Quality
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-frontend-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Frontend Quality
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-code-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 Code Quality
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#65-overall-engineering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.5 Overall Engineering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#66-bonus-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.6 Bonus Points
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-tech-stack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Tech Stack
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-submission-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Submission Requirements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="8. Submission Requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#81-final-submission-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8.1 Final Submission Checklist
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-chapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Chapters
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="chapter-1-assignment-specification">Chapter 1 — Assignment Specification<a class="headerlink" href="#chapter-1-assignment-specification" title="Permanent link">&para;</a></h1>
+<h2 id="1-context">1. Context<a class="headerlink" href="#1-context" title="Permanent link">&para;</a></h2>
+<p>This handbook documents the design and engineering of an AI-powered CSV Importer built for the <strong>GrowEasy</strong> Software Developer assignment (Intern / Full-Time track).</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Detail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Company</td>
+<td>GrowEasy — https://groweasy.ai</td>
+</tr>
+<tr>
+<td>Work mode</td>
+<td>Work From Home (WFH)</td>
+</tr>
+<tr>
+<td>Joining</td>
+<td>Immediate</td>
+</tr>
+<tr>
+<td>Internship compensation</td>
+<td>₹15,000 – ₹20,000 per month</td>
+</tr>
+<tr>
+<td>Full-time compensation</td>
+<td>₹35,000 – ₹50,000 per month</td>
+</tr>
+<tr>
+<td>Full-time prerequisite</td>
+<td>Minimum 1 year of full-time software development experience</td>
+</tr>
+<tr>
+<td>Submission deadline</td>
+<td>12 July 2026</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2-objective">2. Objective<a class="headerlink" href="#2-objective" title="Permanent link">&para;</a></h2>
+<p>Build an <strong>AI-powered CSV Importer</strong> that can intelligently extract CRM lead information from <strong>any valid CSV format</strong>.</p>
+<blockquote>
+<p>The challenge is not parsing CSV files. The challenge is allowing users to upload CSVs with different column names, layouts, and structures, while the system accurately maps and extracts the required CRM fields using AI.</p>
+</blockquote>
+<p>The application must identify the appropriate fields in an arbitrary CSV and convert them into GrowEasy CRM format.</p>
+<h3 id="21-example-input-variations">2.1 Example Input Variations<a class="headerlink" href="#21-example-input-variations" title="Permanent link">&para;</a></h3>
+<p>All of the following CSV origins must work:</p>
+<ul>
+<li>Facebook Lead Export</li>
+<li>Google Ads Export</li>
+<li>Excel sheets</li>
+<li>Real Estate CRM exports</li>
+<li>Sales reports</li>
+<li>Marketing agency CSVs</li>
+<li>Manually created spreadsheets</li>
+</ul>
+<h2 id="3-functional-requirements">3. Functional Requirements<a class="headerlink" href="#3-functional-requirements" title="Permanent link">&para;</a></h2>
+<p>The project consists of both a <strong>Frontend</strong> and a <strong>Backend</strong>.</p>
+<h3 id="31-frontend-requirements">3.1 Frontend Requirements<a class="headerlink" href="#31-frontend-requirements" title="Permanent link">&para;</a></h3>
+<p>Create a responsive web application implementing the following four-step workflow.</p>
+<pre class="mermaid"><code>flowchart LR
+    A["Step 1 — Upload CSV"] --&gt; B["Step 2 — Preview (no AI yet)"]
+    B --&gt; C["Step 3 — Confirm Import"]
+    C --&gt; D["Step 4 — Display Parsed Result"]</code></pre>
+<h4 id="step-1-upload-csv">Step 1 — Upload CSV<a class="headerlink" href="#step-1-upload-csv" title="Permanent link">&para;</a></h4>
+<p>Allow users to upload a valid CSV file. Examples:</p>
+<ul>
+<li>Drag &amp; Drop upload</li>
+<li>File Picker</li>
+</ul>
+<h4 id="step-2-preview">Step 2 — Preview<a class="headerlink" href="#step-2-preview" title="Permanent link">&para;</a></h4>
+<p>After upload:</p>
+<ul>
+<li>Parse the CSV</li>
+<li>Show a preview of uploaded rows</li>
+<li>Display data inside a beautiful responsive table</li>
+</ul>
+<p>The table should support:</p>
+<ul>
+<li>Horizontal scrolling</li>
+<li>Vertical scrolling</li>
+<li>Sticky headers (preferred)</li>
+<li>Responsive design</li>
+</ul>
+<p><strong>No AI processing should happen at this stage.</strong></p>
+<h4 id="step-3-confirm-import">Step 3 — Confirm Import<a class="headerlink" href="#step-3-confirm-import" title="Permanent link">&para;</a></h4>
+<p>Provide a Confirm button. Only after confirmation should the frontend call the backend API.</p>
+<h4 id="step-4-display-parsed-result">Step 4 — Display Parsed Result<a class="headerlink" href="#step-4-display-parsed-result" title="Permanent link">&para;</a></h4>
+<p>The backend returns AI-extracted CRM records. Display the parsed result in another responsive table, showing:</p>
+<ul>
+<li>Successfully parsed records</li>
+<li>Skipped records (if any)</li>
+<li>Total imported</li>
+<li>Total skipped</li>
+</ul>
+<h3 id="32-backend-requirements">3.2 Backend Requirements<a class="headerlink" href="#32-backend-requirements" title="Permanent link">&para;</a></h3>
+<p>Create APIs that:</p>
+<ol>
+<li><strong>Accept CSV Upload.</strong> Accept any valid CSV file. Do not assume column names are fixed.</li>
+<li><strong>Parse CSV.</strong> Convert the CSV into records.</li>
+<li><strong>AI Extraction.</strong> Send records to an AI model in batches. The AI should intelligently map available fields into GrowEasy CRM format. OpenAI, Gemini, Claude, or any equivalent LLM may be used.</li>
+<li><strong>Return Structured JSON.</strong> Return extracted CRM records in JSON format.</li>
+</ol>
+<h2 id="4-required-crm-fields">4. Required CRM Fields<a class="headerlink" href="#4-required-crm-fields" title="Permanent link">&para;</a></h2>
+<p>The AI should extract as many of the following fields as possible.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>created_at</code></td>
+<td>Lead creation date</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>Lead name</td>
+</tr>
+<tr>
+<td><code>email</code></td>
+<td>Primary email</td>
+</tr>
+<tr>
+<td><code>country_code</code></td>
+<td>Country code</td>
+</tr>
+<tr>
+<td><code>mobile_without_country_code</code></td>
+<td>Mobile number</td>
+</tr>
+<tr>
+<td><code>company</code></td>
+<td>Company name</td>
+</tr>
+<tr>
+<td><code>city</code></td>
+<td>City</td>
+</tr>
+<tr>
+<td><code>state</code></td>
+<td>State</td>
+</tr>
+<tr>
+<td><code>country</code></td>
+<td>Country</td>
+</tr>
+<tr>
+<td><code>lead_owner</code></td>
+<td>Lead owner</td>
+</tr>
+<tr>
+<td><code>crm_status</code></td>
+<td>Lead status</td>
+</tr>
+<tr>
+<td><code>crm_note</code></td>
+<td>Notes/remarks</td>
+</tr>
+<tr>
+<td><code>data_source</code></td>
+<td>Source</td>
+</tr>
+<tr>
+<td><code>possession_time</code></td>
+<td>Property possession time</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>Additional description</td>
+</tr>
+</tbody>
+</table>
+<h3 id="41-sample-crm-records">4.1 Sample CRM Records<a class="headerlink" href="#41-sample-crm-records" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>created_at,name,email,country_code,mobile_without_country_code,company,city,state,country,lead_owner,crm_status,crm_note,data_source,possession_time,description
+2026-05-13 14:20:48,John Doe,john.doe@example.com,+91,9876543210,GrowEasy,Mumbai,Maharashtra,India,test@gmail.com,GOOD_LEAD_FOLLOW_UP,Client is asking to reschedule demo,,,
+2026-05-13 14:25:30,Sarah Johnson,sarah.johnson@example.com,+91,9876543211,Tech Solutions,Bangalore,Karnataka,India,test@gmail.com,DID_NOT_CONNECT,&quot;Person was busy, will try again next week&quot;,,,
+2026-05-13 14:30:15,Rajesh Patel,rajesh.patel@example.com,+91,9876543212,Startup Inc,Delhi,Delhi,India,test@gmail.com,BAD_LEAD,Not interested in our services,,,
+2026-05-13 14:35:22,Priya Singh,priya.singh@example.com,+91,9876543213,Enterprise Corp,Pune,Maharashtra,India,test@gmail.com,SALE_DONE,&quot;Deal closed, onboarding in progress&quot;,,,
+</code></pre></div>
+<h2 id="5-ai-extraction-rules">5. AI Extraction Rules<a class="headerlink" href="#5-ai-extraction-rules" title="Permanent link">&para;</a></h2>
+<p>The AI must follow these rules while extracting records.</p>
+<h3 id="51-allowed-crm-status-values">5.1 Allowed CRM Status Values<a class="headerlink" href="#51-allowed-crm-status-values" title="Permanent link">&para;</a></h3>
+<p><code>crm_status</code> may only be one of:</p>
+<ul>
+<li><code>GOOD_LEAD_FOLLOW_UP</code></li>
+<li><code>DID_NOT_CONNECT</code></li>
+<li><code>BAD_LEAD</code></li>
+<li><code>SALE_DONE</code></li>
+</ul>
+<h3 id="52-allowed-data-source-values">5.2 Allowed Data Source Values<a class="headerlink" href="#52-allowed-data-source-values" title="Permanent link">&para;</a></h3>
+<p><code>data_source</code> may only be one of:</p>
+<ul>
+<li><code>leads_on_demand</code></li>
+<li><code>meridian_tower</code></li>
+<li><code>eden_park</code></li>
+<li><code>varah_swamy</code></li>
+<li><code>sarjapur_plots</code></li>
+</ul>
+<p>If none match confidently, leave it blank.</p>
+<h3 id="53-date-format">5.3 Date Format<a class="headerlink" href="#53-date-format" title="Permanent link">&para;</a></h3>
+<p><code>created_at</code> must be convertible using JavaScript:</p>
+<div class="highlight"><pre><span></span><code><span class="ow">new</span><span class="w"> </span><span class="nb">Date</span><span class="p">(</span><span class="nx">created_at</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="54-crm-notes">5.4 CRM Notes<a class="headerlink" href="#54-crm-notes" title="Permanent link">&para;</a></h3>
+<p>Use <code>crm_note</code> for:</p>
+<ul>
+<li>Remarks</li>
+<li>Follow-up notes</li>
+<li>Additional comments</li>
+<li>Extra phone numbers</li>
+<li>Extra email addresses</li>
+<li>Any useful information that doesn't fit another field</li>
+</ul>
+<h3 id="55-multiple-emails-or-mobile-numbers">5.5 Multiple Emails or Mobile Numbers<a class="headerlink" href="#55-multiple-emails-or-mobile-numbers" title="Permanent link">&para;</a></h3>
+<p>If multiple email addresses exist:</p>
+<ul>
+<li>Use the first email.</li>
+<li>Append remaining emails into <code>crm_note</code>.</li>
+</ul>
+<p>If multiple mobile numbers exist:</p>
+<ul>
+<li>Use the first mobile.</li>
+<li>Append remaining numbers into <code>crm_note</code>.</li>
+</ul>
+<h3 id="56-csv-compatibility">5.6 CSV Compatibility<a class="headerlink" href="#56-csv-compatibility" title="Permanent link">&para;</a></h3>
+<p>Each record must remain a single CSV row. Avoid introducing unintended line breaks. If line breaks are necessary, escape them appropriately (for example, <code>\n</code>) so the CSV remains valid.</p>
+<h3 id="57-skip-invalid-records">5.7 Skip Invalid Records<a class="headerlink" href="#57-skip-invalid-records" title="Permanent link">&para;</a></h3>
+<p>If a record contains <strong>neither</strong> an email <strong>nor</strong> a mobile number, skip that record.</p>
+<h2 id="6-evaluation-criteria">6. Evaluation Criteria<a class="headerlink" href="#6-evaluation-criteria" title="Permanent link">&para;</a></h2>
+<p>Candidates are primarily evaluated on the following.</p>
+<h3 id="61-ai-prompt-engineering">6.1 AI Prompt Engineering<a class="headerlink" href="#61-ai-prompt-engineering" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Ability to extract fields accurately</li>
+<li>Intelligent field mapping</li>
+<li>Handling messy datasets</li>
+<li>Handling ambiguous columns</li>
+</ul>
+<h3 id="62-backend-quality">6.2 Backend Quality<a class="headerlink" href="#62-backend-quality" title="Permanent link">&para;</a></h3>
+<ul>
+<li>API design</li>
+<li>Clean architecture</li>
+<li>Error handling</li>
+<li>Batch processing</li>
+<li>Maintainable code</li>
+</ul>
+<h3 id="63-frontend-quality">6.3 Frontend Quality<a class="headerlink" href="#63-frontend-quality" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Modern UI</li>
+<li>Responsive layout</li>
+<li>Clean UX</li>
+<li>CSV preview experience</li>
+<li>Loading states</li>
+<li>Error handling</li>
+</ul>
+<h3 id="64-code-quality">6.4 Code Quality<a class="headerlink" href="#64-code-quality" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Readability</li>
+<li>Type safety</li>
+<li>Folder structure</li>
+<li>Reusability</li>
+<li>Best practices</li>
+</ul>
+<h3 id="65-overall-engineering">6.5 Overall Engineering<a class="headerlink" href="#65-overall-engineering" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Performance</li>
+<li>Edge case handling</li>
+<li>Production readiness</li>
+</ul>
+<h3 id="66-bonus-points">6.6 Bonus Points<a class="headerlink" href="#66-bonus-points" title="Permanent link">&para;</a></h3>
+<p>Additional credit is given for implementing:</p>
+<ul>
+<li>Drag &amp; Drop upload</li>
+<li>Progress indicators during AI processing</li>
+<li>Streaming or incremental parsing</li>
+<li>Retry mechanism for failed AI batches</li>
+<li>Virtualized table for large CSVs</li>
+<li>Dark mode</li>
+<li>Unit tests</li>
+<li>Docker setup</li>
+<li>Deployment using Vercel, Railway, Render, or similar platforms</li>
+<li>Well-written README with setup instructions</li>
+</ul>
+<h2 id="7-tech-stack">7. Tech Stack<a class="headerlink" href="#7-tech-stack" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Technology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Frontend</td>
+<td>Next.js</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td>Node.js, Express</td>
+</tr>
+<tr>
+<td>AI</td>
+<td>OpenAI, Gemini, Claude, or any equivalent LLM</td>
+</tr>
+<tr>
+<td>Database (optional)</td>
+<td>Any database if required, or keep the project stateless</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8-submission-requirements">8. Submission Requirements<a class="headerlink" href="#8-submission-requirements" title="Permanent link">&para;</a></h2>
+<p>Submit to <strong>varun@groweasy.ai</strong>. The email must include:</p>
+<ul>
+<li>Hosted application URL</li>
+<li>GitHub repository URL</li>
+<li>Position being applied for: Software Developer Intern, or Software Developer (Full-Time)</li>
+</ul>
+<h3 id="81-final-submission-checklist">8.1 Final Submission Checklist<a class="headerlink" href="#81-final-submission-checklist" title="Permanent link">&para;</a></h3>
+<p>Before submitting, ensure the following are included:</p>
+<ul>
+<li>Publicly hosted application</li>
+<li>Public GitHub repository</li>
+<li>README containing setup instructions</li>
+<li>Position applied for (Intern / Full-Time)</li>
+</ul>
+<hr />
+<h2 id="related-chapters">Related Chapters<a class="headerlink" href="#related-chapters" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../02-solution-analysis/">Chapter 2 — Solution Analysis &amp; Design Approach</a> — how this specification is analyzed and turned into an engineered solution</li>
+<li><a href="../03-engineering-roadmap/">Chapter 3 — Engineering Roadmap &amp; Methodology</a> — the 18-volume roadmap derived from these requirements</li>
+<li><a href="../11-prompt-engineering/">Chapter 11 — Prompt Engineering &amp; Semantic Intelligence</a> — implements the AI extraction rules defined here</li>
+<li><a href="../13-validation-trust-engine/">Chapter 13 — Validation, Business Rules &amp; Trust Engine</a> — enforces the allowed-value and skip rules from this specification</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "toc.follow", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,2618 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Architecture documentation for an AI-powered data-ingestion platform that extracts CRM lead data from arbitrary CSV formats using LLMs.">
+      
+      
+      
+      
+        <link rel="prev" href="../12-semantic-intelligence/">
+      
+      
+        <link rel="next" href="../14-execution-orchestration/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>13. Validation, Business Rules & Trust Engine - AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#chapter-13-validation-business-rules-trust-engine" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="AI Data Ingestion Engine (AIDE) — Architecture &amp; Engineering Handbook" class="md-header__button md-logo" aria-label="AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              13. Validation, Business Rules & Trust Engine
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="AI Data Ingestion Engine (AIDE) — Architecture &amp; Engineering Handbook" class="md-nav__button md-logo" aria-label="AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part I — Foundations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part I — Foundations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-assignment-specification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1. Assignment Specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-solution-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2. Solution Analysis & Design Approach
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-engineering-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3. Engineering Roadmap & Methodology
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-pipeline-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4. The Pipeline Architecture Mindset
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part II — System & Application Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part II — System & Application Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-system-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    5. Product Thinking & System Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-frontend-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6. Frontend Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-backend-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    7. Backend Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part III — The Data Pipeline
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part III — The Data Pipeline
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-csv-processing-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    8. CSV Processing Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-data-normalization-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    9. Data Normalization Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part IV — The AI Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part IV — The AI Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-ai-extraction-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10. AI Extraction Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-prompt-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    11. Prompt Engineering & Semantic Intelligence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-semantic-intelligence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    12. Semantic Intelligence & Prompt Orchestration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    13. Validation, Business Rules & Trust Engine
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    13. Validation, Business Rules & Trust Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-why-a-validation-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Why a Validation Engine?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-philosophy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Philosophy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-validation-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Validation Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-trust-levels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Trust Levels
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-validation-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Validation Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-schema-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Schema Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-required-structure-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Required Structure Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-field-validators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Field Validators
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-email-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Email Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-phone-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Phone Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-date-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Date Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-enum-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Enum Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-data-source-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Data Source Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-cross-field-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Cross-Field Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-business-rules-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. Business Rules Engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-duplicate-contact-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. Duplicate Contact Rules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-crm-note-builder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. CRM Note Builder
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18-repair-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. Repair Engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19-confidence-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. Confidence Engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#20-trust-categories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20. Trust Categories
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#21-duplicate-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21. Duplicate Detection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-record-fingerprinting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22. Record Fingerprinting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-validation-reports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23. Validation Reports
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#24-validation-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24. Validation Metrics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#25-error-categories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25. Error Categories
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#26-validation-rule-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26. Validation Rule Registry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#27-rule-execution-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        27. Rule Execution Engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#28-validation-pipeline-state-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28. Validation Pipeline State Machine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#29-validation-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        29. Validation Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#30-why-this-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        30. Why This Matters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#31-one-major-improvement-beyond-the-assignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        31. One Major Improvement Beyond the Assignment
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="31. One Major Improvement Beyond the Assignment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explainable-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Explainable Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#32-engineering-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        32. Engineering Decisions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#33-architecture-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        33. Architecture Status
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Tasks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-chapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Chapters
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part V — Running at Scale
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part V — Running at Scale
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../14-execution-orchestration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    14. Execution Engine, Orchestration & Concurrency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../15-observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    15. Observability, Telemetry & Operational Intelligence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-reliability-resilience/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    16. Reliability, Resilience & Fault Tolerance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-security-ai-safety/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    17. Security, Privacy & AI Safety
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part VI — Delivery & Evolution
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part VI — Delivery & Evolution
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../18-quality-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    18. Quality Engineering, Testing & Continuous Verification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../19-platform-engineering-devops/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    19. Platform Engineering, DevOps & Production Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../20-future-evolution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    20. Future Evolution & Platform Vision
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-why-a-validation-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Why a Validation Engine?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-philosophy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Philosophy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-validation-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Validation Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-trust-levels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Trust Levels
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-validation-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Validation Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-schema-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Schema Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-required-structure-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Required Structure Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-field-validators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Field Validators
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-email-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Email Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-phone-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Phone Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-date-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Date Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-enum-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Enum Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-data-source-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Data Source Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-cross-field-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Cross-Field Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-business-rules-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. Business Rules Engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-duplicate-contact-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. Duplicate Contact Rules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-crm-note-builder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. CRM Note Builder
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18-repair-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. Repair Engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19-confidence-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. Confidence Engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#20-trust-categories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20. Trust Categories
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#21-duplicate-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21. Duplicate Detection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-record-fingerprinting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22. Record Fingerprinting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-validation-reports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23. Validation Reports
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#24-validation-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24. Validation Metrics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#25-error-categories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25. Error Categories
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#26-validation-rule-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26. Validation Rule Registry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#27-rule-execution-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        27. Rule Execution Engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#28-validation-pipeline-state-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28. Validation Pipeline State Machine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#29-validation-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        29. Validation Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#30-why-this-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        30. Why This Matters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#31-one-major-improvement-beyond-the-assignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        31. One Major Improvement Beyond the Assignment
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="31. One Major Improvement Beyond the Assignment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#explainable-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Explainable Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#32-engineering-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        32. Engineering Decisions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#33-architecture-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        33. Architecture Status
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Tasks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-chapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Chapters
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="chapter-13-validation-business-rules-trust-engine">Chapter 13 — Validation, Business Rules &amp; Trust Engine<a class="headerlink" href="#chapter-13-validation-business-rules-trust-engine" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Goal:</strong> Build a deterministic trust layer that verifies, repairs, enriches, and approves AI output before it becomes a CRM record.</p>
+<p><strong>Core Principle:</strong> <strong>Never trust AI output. Verify everything.</strong></p>
+</blockquote>
+<p>The chapters up to this point designed <strong>how to extract data</strong> (see <a href="../10-ai-extraction-engine/">Chapter 10 — AI Extraction Engine</a> and <a href="../12-semantic-intelligence/">Chapter 12 — Semantic Intelligence &amp; Prompt Orchestration</a>). From here onward, the question is no longer <em>"Can the AI extract data?"</em> — it becomes <em>"Can we trust the extracted data?"</em> This is where most AI projects fail.</p>
+<h2 id="1-why-a-validation-engine">1. Why a Validation Engine?<a class="headerlink" href="#1-why-a-validation-engine" title="Permanent link">&para;</a></h2>
+<p>The naive design wires the model straight into storage:</p>
+<div class="highlight"><pre><span></span><code>AI → Database
+</code></pre></div>
+<p>This is extremely dangerous. Suppose the AI returns:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;john@gmail&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;crm_status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;INTERESTED&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;country&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Mars&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Everything in that object is wrong — the email is malformed, the status is not a known enum value, and the country does not exist. A production system never allows AI to directly create business objects. Instead:</p>
+<pre class="mermaid"><code>flowchart TD
+    A[AI] --&gt; B[Validation Engine]
+    B --&gt; C[Business Rules]
+    C --&gt; D[Trust Engine]
+    D --&gt; E[CRM Record]</code></pre>
+<h2 id="2-philosophy">2. Philosophy<a class="headerlink" href="#2-philosophy" title="Permanent link">&para;</a></h2>
+<p>Think of the AI as a junior employee. No organization lets a junior employee directly update the production CRM — someone reviews the work first. The Validation Engine is that reviewer.</p>
+<h2 id="3-validation-pipeline">3. Validation Pipeline<a class="headerlink" href="#3-validation-pipeline" title="Permanent link">&para;</a></h2>
+<p>Every AI output passes through a fixed sequence of stages, and every stage increases confidence:</p>
+<pre class="mermaid"><code>flowchart TD
+    A[AI Output] --&gt; B[Schema Validation]
+    B --&gt; C[Field Validation]
+    C --&gt; D[Business Rule Validation]
+    D --&gt; E[Relationship Validation]
+    E --&gt; F[Confidence Analysis]
+    F --&gt; G[Repair Engine]
+    G --&gt; H[Approval Engine]
+    H --&gt; I[CRM Record]</code></pre>
+<h2 id="4-trust-levels">4. Trust Levels<a class="headerlink" href="#4-trust-levels" title="Permanent link">&para;</a></h2>
+<p>Not every record is equally trustworthy, so records are classified rather than treated uniformly:</p>
+<div class="highlight"><pre><span></span><code>High Confidence   → Auto Import
+Medium Confidence → Repair → Import
+Low Confidence    → Skip → Review
+</code></pre></div>
+<p>Future versions could expose the review queue as a user-facing feature.</p>
+<h2 id="5-validation-architecture">5. Validation Architecture<a class="headerlink" href="#5-validation-architecture" title="Permanent link">&para;</a></h2>
+<p>Validation isn't one function — it's an ecosystem of cooperating components:</p>
+<pre class="mermaid"><code>flowchart TD
+    TE[Trust Engine] --&gt; SV[Schema Validator]
+    TE --&gt; FV[Field Validator]
+    TE --&gt; RE[Rule Engine]
+    SV --&gt; RV[Relationship Validator]
+    FV --&gt; RV
+    RE --&gt; RV
+    RV --&gt; CE[Confidence Engine]
+    CE --&gt; RP[Repair Engine]
+    RP --&gt; AE[Approval Engine]
+    AE --&gt; CR[CRM Records]</code></pre>
+<h2 id="6-schema-validation">6. Schema Validation<a class="headerlink" href="#6-schema-validation" title="Permanent link">&para;</a></h2>
+<p>The first check verifies structure. If the schema expects <code>email</code> to be <code>string | null</code> and the AI returns <code>email: []</code>, the value is rejected immediately. Every field must satisfy the schema before any deeper validation runs.</p>
+<h2 id="7-required-structure-validation">7. Required Structure Validation<a class="headerlink" href="#7-required-structure-validation" title="Permanent link">&para;</a></h2>
+<p>Every record must contain the complete set of expected fields:</p>
+<div class="highlight"><pre><span></span><code>created_at
+name
+email
+mobile
+company
+...
+crm_status
+</code></pre></div>
+<p>Missing fields are filled with <code>null</code>. The engine never allows inconsistent objects — every record downstream has an identical shape.</p>
+<h2 id="8-field-validators">8. Field Validators<a class="headerlink" href="#8-field-validators" title="Permanent link">&para;</a></h2>
+<p>Every field has its own validator, and each validator owns exactly one responsibility:</p>
+<table>
+<thead>
+<tr>
+<th>Validator</th>
+<th>Checks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Email Validator</td>
+<td>RFC format</td>
+</tr>
+<tr>
+<td>Phone Validator</td>
+<td>Digits</td>
+</tr>
+<tr>
+<td>Country Validator</td>
+<td>Known country</td>
+</tr>
+<tr>
+<td>Status Validator</td>
+<td>Enum membership</td>
+</tr>
+</tbody>
+</table>
+<h2 id="9-email-validation">9. Email Validation<a class="headerlink" href="#9-email-validation" title="Permanent link">&para;</a></h2>
+<p>Email syntax is checked deterministically:</p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>john@gmail</code></td>
+<td>Invalid</td>
+</tr>
+<tr>
+<td><code>john@@gmail.com</code></td>
+<td>Invalid</td>
+</tr>
+<tr>
+<td><code>john@gmail.com</code></td>
+<td>Valid</td>
+</tr>
+</tbody>
+</table>
+<p>Never ask the AI to validate email syntax — this is a solved, deterministic problem.</p>
+<h2 id="10-phone-validation">10. Phone Validation<a class="headerlink" href="#10-phone-validation" title="Permanent link">&para;</a></h2>
+<p>Likewise deterministic:</p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>9876543210</code></td>
+<td>Valid</td>
+</tr>
+<tr>
+<td><code>abc123</code></td>
+<td>Invalid</td>
+</tr>
+</tbody>
+</table>
+<h2 id="11-date-validation">11. Date Validation<a class="headerlink" href="#11-date-validation" title="Permanent link">&para;</a></h2>
+<p>The requirement is that <code>created_at</code> must work with:</p>
+<div class="highlight"><pre><span></span><code><span class="ow">new</span><span class="w"> </span><span class="nb">Date</span><span class="p">(</span><span class="nx">created_at</span><span class="p">)</span>
+</code></pre></div>
+<p>Validation checks that the value is:</p>
+<ul>
+<li>parsable</li>
+<li>not corrupted</li>
+<li>normalized</li>
+</ul>
+<p>If a date fails these checks, it is either repaired or set to <code>null</code>.</p>
+<h2 id="12-enum-validation">12. Enum Validation<a class="headerlink" href="#12-enum-validation" title="Permanent link">&para;</a></h2>
+<p>The CRM status field allows exactly four values:</p>
+<div class="highlight"><pre><span></span><code>GOOD_LEAD_FOLLOW_UP
+DID_NOT_CONNECT
+BAD_LEAD
+SALE_DONE
+</code></pre></div>
+<p>If the AI returns <code>Interested</code>, the value is invalid. The engine attempts a repair; if repair fails, the field becomes <code>null</code>. The system never invents enum values.</p>
+<h2 id="13-data-source-validation">13. Data Source Validation<a class="headerlink" href="#13-data-source-validation" title="Permanent link">&para;</a></h2>
+<p>The data source field is restricted to the known set:</p>
+<div class="highlight"><pre><span></span><code>leads_on_demand
+meridian_tower
+eden_park
+varah_swamy
+sarjapur_plots
+</code></pre></div>
+<p>Anything else becomes <code>null</code>.</p>
+<h2 id="14-cross-field-validation">14. Cross-Field Validation<a class="headerlink" href="#14-cross-field-validation" title="Permanent link">&para;</a></h2>
+<p>One field alone isn't enough — fields must be consistent with each other.</p>
+<p>Example — an impossible combination that must be flagged:</p>
+<div class="highlight"><pre><span></span><code>Country Code: +91
+Country:      USA
+</code></pre></div>
+<p>Example — a suspicious combination:</p>
+<div class="highlight"><pre><span></span><code>City:    Mumbai
+Country: Germany
+</code></pre></div>
+<p>Relationship validation detects contradictions that per-field validators cannot see.</p>
+<h2 id="15-business-rules-engine">15. Business Rules Engine<a class="headerlink" href="#15-business-rules-engine" title="Permanent link">&para;</a></h2>
+<p>Assignment-level rules belong here, not in the AI layer. Example — the skip rule:</p>
+<div class="highlight"><pre><span></span><code>IF email IS NULL AND phone IS NULL → SKIP record
+</code></pre></div>
+<p>This is business logic, executed deterministically by a rule — never delegated to the AI.</p>
+<h2 id="16-duplicate-contact-rules">16. Duplicate Contact Rules<a class="headerlink" href="#16-duplicate-contact-rules" title="Permanent link">&para;</a></h2>
+<p>Within a single record, contact values can repeat:</p>
+<div class="highlight"><pre><span></span><code>Primary Email:   john@gmail.com
+Secondary Email: john@gmail.com
+</code></pre></div>
+<p>This is a duplicate — keep one. When a record has multiple phone numbers, keep the first as the primary and move the others into <code>crm_note</code>, exactly as the assignment requires.</p>
+<h2 id="17-crm-note-builder">17. CRM Note Builder<a class="headerlink" href="#17-crm-note-builder" title="Permanent link">&para;</a></h2>
+<p>One of the most overlooked components. It merges the leftover signal into a single field:</p>
+<div class="highlight"><pre><span></span><code>Additional Emails + Additional Phones + Remarks + Comments → crm_note
+</code></pre></div>
+<p>with consistent formatting, so no extracted information is silently lost.</p>
+<h2 id="18-repair-engine">18. Repair Engine<a class="headerlink" href="#18-repair-engine" title="Permanent link">&para;</a></h2>
+<p>Validation failures don't always require rejection. Many values can be repaired deterministically:</p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Repair</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GOOD LEAD</code></td>
+<td>Enum normalization</td>
+<td><code>GOOD_LEAD_FOLLOW_UP</code></td>
+</tr>
+<tr>
+<td><code>india</code></td>
+<td>Case normalization</td>
+<td><code>India</code></td>
+</tr>
+<tr>
+<td><code>john@gmail.com</code></td>
+<td>Trim whitespace</td>
+<td>Valid email</td>
+</tr>
+</tbody>
+</table>
+<p>The policy is: <strong>repair first, reject later.</strong> This maximizes the import success rate without compromising correctness.</p>
+<h2 id="19-confidence-engine">19. Confidence Engine<a class="headerlink" href="#19-confidence-engine" title="Permanent link">&para;</a></h2>
+<p>Every record receives a numeric score built from weighted signals:</p>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Adjustment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Email valid</td>
+<td>+20</td>
+</tr>
+<tr>
+<td>Phone valid</td>
+<td>+20</td>
+</tr>
+<tr>
+<td>Name present</td>
+<td>+10</td>
+</tr>
+<tr>
+<td>Status known</td>
+<td>+10</td>
+</tr>
+<tr>
+<td>Contradiction detected</td>
+<td>-30</td>
+</tr>
+</tbody>
+</table>
+<p>Example final score: <strong>78%</strong>.</p>
+<h2 id="20-trust-categories">20. Trust Categories<a class="headerlink" href="#20-trust-categories" title="Permanent link">&para;</a></h2>
+<p>Instead of a binary valid/invalid decision, the score maps to a trust category:</p>
+<table>
+<thead>
+<tr>
+<th>Score</th>
+<th>Category</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>90–100</td>
+<td>Trusted</td>
+<td>Auto Import</td>
+</tr>
+<tr>
+<td>70–90</td>
+<td>Good</td>
+<td>Import</td>
+</tr>
+<tr>
+<td>40–70</td>
+<td>Repair</td>
+<td>Revalidate</td>
+</tr>
+<tr>
+<td>Below 40</td>
+<td>—</td>
+<td>Skip</td>
+</tr>
+</tbody>
+</table>
+<h2 id="21-duplicate-detection">21. Duplicate Detection<a class="headerlink" href="#21-duplicate-detection" title="Permanent link">&para;</a></h2>
+<p>Suppose the CSV contains both:</p>
+<div class="highlight"><pre><span></span><code>John        john@gmail.com
+John Doe    john@gmail.com
+</code></pre></div>
+<p>This is a potential duplicate. The engine flags it but does <strong>not</strong> remove it automatically — future CRM integrations may decide how to merge or discard flagged duplicates.</p>
+<h2 id="22-record-fingerprinting">22. Record Fingerprinting<a class="headerlink" href="#22-record-fingerprinting" title="Permanent link">&para;</a></h2>
+<p>Each record is given an internal identity — a hash of:</p>
+<div class="highlight"><pre><span></span><code>Email + Phone + Name → Fingerprint
+</code></pre></div>
+<p>Fingerprints are useful for:</p>
+<ul>
+<li>deduplication</li>
+<li>analytics</li>
+<li>caching</li>
+</ul>
+<h2 id="23-validation-reports">23. Validation Reports<a class="headerlink" href="#23-validation-reports" title="Permanent link">&para;</a></h2>
+<p>Every record produces per-field diagnostics:</p>
+<div class="highlight"><pre><span></span><code>Validated:  ✓
+Email:      ✓
+Phone:      ✓
+Status:     ✓
+Country:    ×
+Repaired:   1
+Warnings:   2
+</code></pre></div>
+<p>This makes debugging individual records straightforward.</p>
+<h2 id="24-validation-metrics">24. Validation Metrics<a class="headerlink" href="#24-validation-metrics" title="Permanent link">&para;</a></h2>
+<p>The system also aggregates run-level metrics — ideal for dashboards (see <a href="../15-observability/">Chapter 15 — Observability</a>):</p>
+<div class="highlight"><pre><span></span><code>Records:    1500
+Valid:      1438
+Repaired:   41
+Skipped:    21
+Duplicates: 18
+</code></pre></div>
+<h2 id="25-error-categories">25. Error Categories<a class="headerlink" href="#25-error-categories" title="Permanent link">&para;</a></h2>
+<p>The engine never throws a generic "Validation Failed". Every failure carries a category:</p>
+<div class="highlight"><pre><span></span><code>Schema Error
+Business Rule Error
+Relationship Error
+Repair Failure
+Confidence Failure
+</code></pre></div>
+<p>Categorized errors give clear diagnostics and enable targeted handling.</p>
+<h2 id="26-validation-rule-registry">26. Validation Rule Registry<a class="headerlink" href="#26-validation-rule-registry" title="Permanent link">&para;</a></h2>
+<p>Instead of scattering <code>if (...)</code> checks everywhere, rules are organized in a registry:</p>
+<div class="highlight"><pre><span></span><code>Schema Rules
+Email Rules
+Phone Rules
+Business Rules
+Relationship Rules
+Repair Rules
+</code></pre></div>
+<p>A registry keeps the rule set discoverable and easy to maintain.</p>
+<h2 id="27-rule-execution-engine">27. Rule Execution Engine<a class="headerlink" href="#27-rule-execution-engine" title="Permanent link">&para;</a></h2>
+<p>Rules execute independently:</p>
+<div class="highlight"><pre><span></span><code>Rule 1 → Rule 2 → Rule 3 → Rule 4
+</code></pre></div>
+<p>A single rule failure does <strong>not</strong> stop the remaining validations — the engine collects <strong>all</strong> issues for a record, so one pass reveals every problem.</p>
+<h2 id="28-validation-pipeline-state-machine">28. Validation Pipeline State Machine<a class="headerlink" href="#28-validation-pipeline-state-machine" title="Permanent link">&para;</a></h2>
+<p>Every record moves through a predictable state machine:</p>
+<div class="highlight"><pre><span></span><code>Pending → Schema → Field → Relationship → Business → Repair → Confidence → Approved
+</code></pre></div>
+<p>or terminates in:</p>
+<div class="highlight"><pre><span></span><code>→ Rejected
+</code></pre></div>
+<h2 id="29-validation-architecture">29. Validation Architecture<a class="headerlink" href="#29-validation-architecture" title="Permanent link">&para;</a></h2>
+<p>The complete end-to-end flow, fully deterministic with no AI involvement:</p>
+<pre class="mermaid"><code>flowchart TD
+    VE[Validation Engine] --&gt; SV[Schema Validator]
+    SV --&gt; FV[Field Validators]
+    FV --&gt; XV[Cross Field Validator]
+    XV --&gt; BR[Business Rule Engine]
+    BR --&gt; DD[Duplicate Detector]
+    DD --&gt; RP[Repair Engine]
+    RP --&gt; CC[Confidence Calculator]
+    CC --&gt; AD[Approval Decision]
+    AD --&gt; TR[Trusted Record]</code></pre>
+<h2 id="30-why-this-matters">30. Why This Matters<a class="headerlink" href="#30-why-this-matters" title="Permanent link">&para;</a></h2>
+<p>Suppose the AI provider changes behavior tomorrow — prompt quality drops and extraction accuracy falls. Without validation, garbage enters the CRM. With this architecture, validation catches:</p>
+<ul>
+<li>invalid enums</li>
+<li>broken emails</li>
+<li>impossible relationships</li>
+<li>duplicates</li>
+<li>missing contacts</li>
+<li>malformed dates</li>
+</ul>
+<p>The CRM remains protected regardless of upstream model quality.</p>
+<h2 id="31-one-major-improvement-beyond-the-assignment">31. One Major Improvement Beyond the Assignment<a class="headerlink" href="#31-one-major-improvement-beyond-the-assignment" title="Permanent link">&para;</a></h2>
+<h3 id="explainable-validation">Explainable Validation<a class="headerlink" href="#explainable-validation" title="Permanent link">&para;</a></h3>
+<p>Every accepted or rejected record carries a validation audit:</p>
+<div class="highlight"><pre><span></span><code>Record #214
+Score: 92%
+
+Passed
+  ✓ Email
+  ✓ Phone
+  ✓ Status
+  ✓ Schema
+
+Warnings
+  Country inferred from phone code not used.
+
+Repairs
+  Whitespace removed from email.
+</code></pre></div>
+<p>Now every import decision is explainable. When asked <em>why</em> a record was skipped, the answer is never "validation failed" — it is a concrete audit trail:</p>
+<div class="highlight"><pre><span></span><code>Record 214
+→ Missing Email
+→ Missing Phone
+→ Business Rule BR-001 triggered
+→ Skipped
+</code></pre></div>
+<p>This is the level of observability expected in production systems.</p>
+<h2 id="32-engineering-decisions">32. Engineering Decisions<a class="headerlink" href="#32-engineering-decisions" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AI output never trusted directly</td>
+<td>Prevents invalid CRM records</td>
+</tr>
+<tr>
+<td>Multi-layer validation</td>
+<td>Isolates responsibilities</td>
+</tr>
+<tr>
+<td>Rule registry</td>
+<td>Easier maintenance</td>
+</tr>
+<tr>
+<td>Repair before rejection</td>
+<td>Improves import success rate</td>
+</tr>
+<tr>
+<td>Confidence scoring</td>
+<td>More nuanced than pass/fail</td>
+</tr>
+<tr>
+<td>Validation reports</td>
+<td>Better debugging and UX</td>
+</tr>
+<tr>
+<td>Cross-field validation</td>
+<td>Detects contradictions</td>
+</tr>
+<tr>
+<td>Record fingerprinting</td>
+<td>Supports deduplication and analytics</td>
+</tr>
+<tr>
+<td>Explainable validation</td>
+<td>Makes every decision auditable</td>
+</tr>
+</tbody>
+</table>
+<h2 id="33-architecture-status">33. Architecture Status<a class="headerlink" href="#33-architecture-status" title="Permanent link">&para;</a></h2>
+<p>At this point, the system is no longer just an <strong>AI-powered CSV importer</strong>. It has become a <strong>production-grade AI ingestion platform</strong> with:</p>
+<ul>
+<li>Reliable ingestion (Chapters 5–9)</li>
+<li>Intelligent semantic extraction (Chapters 10–12)</li>
+<li>Deterministic trust and validation (this chapter)</li>
+</ul>
+<p>The remaining chapters focus on <strong>operational excellence</strong>: high-throughput batch execution (<a href="../14-execution-orchestration/">Chapter 14</a>), observability, resilience, deployment, testing, and future evolution into a scalable AI data platform.</p>
+<h2 id="implementation-tasks">Implementation Tasks<a class="headerlink" href="#implementation-tasks" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[ ] <strong>Task 13.1 — Schema Validation Engine.</strong> Verify every AI output object against the expected field types, rejecting structurally invalid values.</li>
+<li>[ ] <strong>Task 13.2 — Field Validators.</strong> Implement single-responsibility validators for email (RFC format), phone (digits), country (known list), and status (enum).</li>
+<li>[ ] <strong>Task 13.3 — Required Structure Validation.</strong> Guarantee every record contains the full field set, filling missing fields with <code>null</code>.</li>
+<li>[ ] <strong>Task 13.4 — Cross-Field Relationship Validation.</strong> Detect contradictions between fields such as country code vs. country and city vs. country.</li>
+<li>[ ] <strong>Task 13.5 — Business Rule Engine.</strong> Implement deterministic business rules, including skipping records with neither email nor phone.</li>
+<li>[ ] <strong>Task 13.6 — Duplicate Detection.</strong> Flag potential duplicate records (same email, similar name) without removing them automatically.</li>
+<li>[ ] <strong>Task 13.7 — CRM Note Builder.</strong> Merge additional emails, additional phones, remarks, and comments into a consistently formatted <code>crm_note</code>.</li>
+<li>[ ] <strong>Task 13.8 — Repair Engine.</strong> Deterministically repair fixable values (enum normalization, casing, whitespace) before considering rejection.</li>
+<li>[ ] <strong>Task 13.9 — Confidence Scoring.</strong> Compute a weighted per-record confidence score from field validity, presence, and contradictions.</li>
+<li>[ ] <strong>Task 13.10 — Trust Categories.</strong> Map confidence scores to trust bands (Trusted / Good / Repair / Skip) that drive the import decision.</li>
+<li>[ ] <strong>Task 13.11 — Record Fingerprinting.</strong> Generate a hash of email + phone + name per record for deduplication, analytics, and caching.</li>
+<li>[ ] <strong>Task 13.12 — Validation Reports.</strong> Emit per-record diagnostics listing passed checks, repairs, and warnings.</li>
+<li>[ ] <strong>Task 13.13 — Validation Metrics.</strong> Aggregate run-level counts (valid, repaired, skipped, duplicates) for dashboards.</li>
+<li>[ ] <strong>Task 13.14 — Rule Registry &amp; Execution Engine.</strong> Organize validation rules in a registry and execute them independently, collecting all issues rather than failing fast.</li>
+<li>[ ] <strong>Task 13.15 — Explainable Validation Audit.</strong> Attach a full audit trail to every accepted or rejected record explaining the decision.</li>
+</ul>
+<hr />
+<h2 id="related-chapters">Related Chapters<a class="headerlink" href="#related-chapters" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../10-ai-extraction-engine/">Chapter 10 — AI Extraction Engine</a> — produces the untrusted AI output this trust layer verifies</li>
+<li><a href="../12-semantic-intelligence/">Chapter 12 — Semantic Intelligence &amp; Prompt Orchestration</a> — the prompt layer whose quality variations validation defends against</li>
+<li><a href="../14-execution-orchestration/">Chapter 14 — Execution Engine, Orchestration &amp; Concurrency</a> — runs validation at scale across parallel batches</li>
+<li><a href="../15-observability/">Chapter 15 — Observability, Telemetry &amp; Operational Intelligence</a> — consumes validation reports and metrics</li>
+<li><a href="../09-data-normalization-engine/">Chapter 9 — Data Normalization Engine</a> — deterministic normalization that precedes AI extraction and validation</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "toc.follow", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

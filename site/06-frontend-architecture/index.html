@@ -1,0 +1,2406 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Architecture documentation for an AI-powered data-ingestion platform that extracts CRM lead data from arbitrary CSV formats using LLMs.">
+      
+      
+      
+      
+        <link rel="prev" href="../05-system-architecture/">
+      
+      
+        <link rel="next" href="../07-backend-architecture/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>6. Frontend Architecture - AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#chapter-6-frontend-architecture" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="AI Data Ingestion Engine (AIDE) — Architecture &amp; Engineering Handbook" class="md-header__button md-logo" aria-label="AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              6. Frontend Architecture
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="AI Data Ingestion Engine (AIDE) — Architecture &amp; Engineering Handbook" class="md-nav__button md-logo" aria-label="AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part I — Foundations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part I — Foundations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-assignment-specification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1. Assignment Specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-solution-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2. Solution Analysis & Design Approach
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-engineering-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3. Engineering Roadmap & Methodology
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-pipeline-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4. The Pipeline Architecture Mindset
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part II — System & Application Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part II — System & Application Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-system-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    5. Product Thinking & System Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6. Frontend Architecture
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6. Frontend Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-frontend-philosophy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Frontend Philosophy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-frontend-responsibilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Frontend Responsibilities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-user-journey" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. User Journey
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-single-page-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Single Page Application
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-application-state-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Application State Machine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-folder-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Folder Structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-component-hierarchy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Component Hierarchy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-upload-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Upload Module
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-preview-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Preview Module
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-statistics-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Statistics Panel
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-import-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Import Module
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-progress-ui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Progress UI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-result-dashboard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Result Dashboard
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-reusable-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Reusable Components
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-table-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. Table Component
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-state-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. State Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="16. State Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ui-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UI State
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#upload-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Upload State
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preview-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preview State
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#import-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Import State
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#result-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Result State
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-api-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. API Layer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18-custom-hooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. Custom Hooks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19-error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. Error Handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#20-loading-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20. Loading Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#21-accessibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21. Accessibility
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-responsive-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22. Responsive Design
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-theme-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23. Theme System
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#24-frontend-data-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24. Frontend Data Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#25-communication-with-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25. Communication with Backend
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#26-frontend-design-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26. Frontend Design Principles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#27-final-frontend-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        27. Final Frontend Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Tasks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-chapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Chapters
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-backend-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    7. Backend Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part III — The Data Pipeline
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part III — The Data Pipeline
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-csv-processing-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    8. CSV Processing Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-data-normalization-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    9. Data Normalization Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part IV — The AI Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part IV — The AI Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-ai-extraction-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10. AI Extraction Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-prompt-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    11. Prompt Engineering & Semantic Intelligence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-semantic-intelligence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    12. Semantic Intelligence & Prompt Orchestration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../13-validation-trust-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    13. Validation, Business Rules & Trust Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part V — Running at Scale
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part V — Running at Scale
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../14-execution-orchestration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    14. Execution Engine, Orchestration & Concurrency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../15-observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    15. Observability, Telemetry & Operational Intelligence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-reliability-resilience/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    16. Reliability, Resilience & Fault Tolerance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-security-ai-safety/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    17. Security, Privacy & AI Safety
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part VI — Delivery & Evolution
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part VI — Delivery & Evolution
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../18-quality-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    18. Quality Engineering, Testing & Continuous Verification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../19-platform-engineering-devops/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    19. Platform Engineering, DevOps & Production Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../20-future-evolution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    20. Future Evolution & Platform Vision
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-frontend-philosophy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Frontend Philosophy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-frontend-responsibilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Frontend Responsibilities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-user-journey" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. User Journey
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-single-page-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Single Page Application
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-application-state-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Application State Machine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-folder-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Folder Structure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-component-hierarchy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Component Hierarchy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-upload-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Upload Module
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-preview-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Preview Module
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-statistics-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Statistics Panel
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-import-module" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Import Module
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-progress-ui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Progress UI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-result-dashboard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Result Dashboard
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-reusable-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Reusable Components
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-table-component" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. Table Component
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-state-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. State Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="16. State Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ui-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UI State
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#upload-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Upload State
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preview-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preview State
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#import-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Import State
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#result-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Result State
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-api-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. API Layer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18-custom-hooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. Custom Hooks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19-error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. Error Handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#20-loading-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20. Loading Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#21-accessibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21. Accessibility
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-responsive-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22. Responsive Design
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-theme-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23. Theme System
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#24-frontend-data-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24. Frontend Data Flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#25-communication-with-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25. Communication with Backend
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#26-frontend-design-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26. Frontend Design Principles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#27-final-frontend-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        27. Final Frontend Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Tasks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-chapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Chapters
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="chapter-6-frontend-architecture">Chapter 6 — Frontend Architecture<a class="headerlink" href="#chapter-6-frontend-architecture" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Goal:</strong> Design a frontend that is scalable, maintainable, highly responsive, and acts as the orchestration layer for the AI Data Ingestion Engine.</p>
+</blockquote>
+<p>The frontend is not "just a UI." In this system it acts as the <strong>orchestrator of the user workflow</strong>: it validates user actions, provides visibility into each processing stage, and communicates with the backend through well-defined API contracts rather than embedding business logic.</p>
+<h2 id="1-frontend-philosophy">1. Frontend Philosophy<a class="headerlink" href="#1-frontend-philosophy" title="Permanent link">&para;</a></h2>
+<p>A typical quick solution builds the frontend as a handful of route-level pages:</p>
+<div class="highlight"><pre><span></span><code>/pages
+  Upload.tsx
+  Preview.tsx
+  Result.tsx
+</code></pre></div>
+<p>Everything becomes mixed together — UI, API calls, business logic, state, and validation — and eventually you get a 700-line React component.</p>
+<p>Instead, we build it like a SaaS application. The frontend has <strong>one responsibility</strong>:</p>
+<blockquote>
+<p>Present information, collect user interactions, and orchestrate the workflow.</p>
+</blockquote>
+<p>It should <strong>never</strong>:</p>
+<ul>
+<li>understand CRM mapping</li>
+<li>validate AI output</li>
+<li>normalize phone numbers</li>
+<li>process business rules</li>
+</ul>
+<p>Those belong to backend services (see <a href="../07-backend-architecture/">Chapter 7 — Backend Architecture</a>).</p>
+<h2 id="2-frontend-responsibilities">2. Frontend Responsibilities<a class="headerlink" href="#2-frontend-responsibilities" title="Permanent link">&para;</a></h2>
+<p>The frontend should only do these things:</p>
+<div class="highlight"><pre><span></span><code>Upload File → Validate Basic Constraints → Preview CSV → Ask User Confirmation
+→ Start Import → Track Progress → Display Results → Allow Export
+</code></pre></div>
+<p>No AI logic. No CRM logic. No parsing logic beyond preview.</p>
+<h2 id="3-user-journey">3. User Journey<a class="headerlink" href="#3-user-journey" title="Permanent link">&para;</a></h2>
+<p>The user experience, end to end:</p>
+<div class="highlight"><pre><span></span><code>Landing Page → Upload CSV → CSV Preview → File Statistics → Confirm Import
+→ Import Progress → Result Dashboard → Download Result
+</code></pre></div>
+<p>Each page is actually a <em>state</em>, not a route.</p>
+<h2 id="4-single-page-application">4. Single Page Application<a class="headerlink" href="#4-single-page-application" title="Permanent link">&para;</a></h2>
+<p>Instead of separate routes (<code>/upload</code>, <code>/preview</code>, <code>/import</code>, <code>/result</code>), we build a single route (<code>/</code>) that renders different UI states.</p>
+<p>Reason: the user never leaves the workflow. No page reload, no lost state — a much smoother UX.</p>
+<h2 id="5-application-state-machine">5. Application State Machine<a class="headerlink" href="#5-application-state-machine" title="Permanent link">&para;</a></h2>
+<p>Think of the frontend as a finite state machine with six states:</p>
+<ul>
+<li><code>Idle</code></li>
+<li><code>Uploading</code></li>
+<li><code>Preview Ready</code></li>
+<li><code>Importing</code></li>
+<li><code>Completed</code></li>
+<li><code>Error</code></li>
+</ul>
+<p>Only one state exists at a time. An example transition sequence:</p>
+<pre class="mermaid"><code>flowchart TD
+    A[Idle] --&gt;|Upload success| B[Preview Ready]
+    B --&gt;|User clicks Confirm| C[Importing]
+    C --&gt;|Finished| D[Completed]</code></pre>
+<p>This avoids dozens of boolean flags like</p>
+<div class="highlight"><pre><span></span><code>isUploading, isLoading, isPreview, isImporting, isComplete, showTable, showResult, ...
+</code></pre></div>
+<p>Instead, a single <code>currentState</code> value controls the UI.</p>
+<h2 id="6-folder-structure">6. Folder Structure<a class="headerlink" href="#6-folder-structure" title="Permanent link">&para;</a></h2>
+<p>Instead of organizing by routes, organize by features:</p>
+<div class="highlight"><pre><span></span><code>src/
+  app/
+  components/
+    upload/
+    preview/
+    import/
+    result/
+    shared/
+  hooks/
+  services/
+  stores/
+  lib/
+  types/
+  utils/
+  constants/
+  styles/
+</code></pre></div>
+<p>Everything has one responsibility.</p>
+<h2 id="7-component-hierarchy">7. Component Hierarchy<a class="headerlink" href="#7-component-hierarchy" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>App
+│
+├── Navbar
+├── WorkflowStepper
+├── UploadSection
+├── PreviewSection
+├── ImportProgress
+├── ResultDashboard
+└── Footer
+</code></pre></div>
+<p>Each section is independent.</p>
+<h2 id="8-upload-module">8. Upload Module<a class="headerlink" href="#8-upload-module" title="Permanent link">&para;</a></h2>
+<p>Responsibilities:</p>
+<ul>
+<li>Drag &amp; Drop</li>
+<li>File Picker</li>
+<li>Validation</li>
+<li>Display File Info</li>
+</ul>
+<p>Nothing else. Output: <code>Selected File</code>.</p>
+<h2 id="9-preview-module">9. Preview Module<a class="headerlink" href="#9-preview-module" title="Permanent link">&para;</a></h2>
+<p>Responsibilities — display:</p>
+<ul>
+<li>Columns</li>
+<li>Rows</li>
+<li>CSV Preview</li>
+<li>Scrollable Table</li>
+</ul>
+<p>Show statistics:</p>
+<ul>
+<li>rows</li>
+<li>columns</li>
+<li>file size</li>
+</ul>
+<p>No AI. No import.</p>
+<h2 id="10-statistics-panel">10. Statistics Panel<a class="headerlink" href="#10-statistics-panel" title="Permanent link">&para;</a></h2>
+<p>Before importing, show useful information:</p>
+<div class="highlight"><pre><span></span><code>Rows
+Columns
+File Size
+Detected Delimiter
+Estimated Batches
+Estimated Processing Time
+Estimated AI Calls
+</code></pre></div>
+<p>Surfacing this information builds user trust through transparency.</p>
+<h2 id="11-import-module">11. Import Module<a class="headerlink" href="#11-import-module" title="Permanent link">&para;</a></h2>
+<p>Very small responsibility:</p>
+<div class="highlight"><pre><span></span><code>User clicks Confirm → POST → Receive Job → Track Progress
+</code></pre></div>
+<p>No processing happens here.</p>
+<h2 id="12-progress-ui">12. Progress UI<a class="headerlink" href="#12-progress-ui" title="Permanent link">&para;</a></h2>
+<p>Instead of a bare spinner (<code>Loading...</code>), build stage-aware progress:</p>
+<div class="highlight"><pre><span></span><code>Uploading
+██████████
+Complete
+
+Processing
+█████░░░░░
+Batch 12 / 30
+
+Imported
+321
+
+Skipped
+18
+</code></pre></div>
+<p>This is the level of feedback users expect from an enterprise product.</p>
+<h2 id="13-result-dashboard">13. Result Dashboard<a class="headerlink" href="#13-result-dashboard" title="Permanent link">&para;</a></h2>
+<p>Instead of only a table, build a dashboard of summary metrics:</p>
+<div class="highlight"><pre><span></span><code>Imported          420
+Skipped           17
+Success           96%
+Time              14 sec
+Batches           18
+Detected Fields   15
+</code></pre></div>
+<p>Below the metrics, render two tables:</p>
+<ul>
+<li>Imported Records Table</li>
+<li>Skipped Records Table</li>
+</ul>
+<h2 id="14-reusable-components">14. Reusable Components<a class="headerlink" href="#14-reusable-components" title="Permanent link">&para;</a></h2>
+<p>Never repeat UI. Create reusable components, then compose screens from them:</p>
+<ul>
+<li>Button</li>
+<li>Card</li>
+<li>Badge</li>
+<li>Alert</li>
+<li>Table</li>
+<li>Modal</li>
+<li>Progress Bar</li>
+<li>Stat Card</li>
+<li>Upload Zone</li>
+<li>Loading Overlay</li>
+<li>Empty State</li>
+<li>Error State</li>
+</ul>
+<h2 id="15-table-component">15. Table Component<a class="headerlink" href="#15-table-component" title="Permanent link">&para;</a></h2>
+<p>Tables are a core requirement of the product, so build one powerful, future-proof component with these capabilities:</p>
+<ul>
+<li>Sticky Header</li>
+<li>Horizontal Scroll</li>
+<li>Vertical Scroll</li>
+<li>Responsive</li>
+<li>Virtualization</li>
+<li>Column Resize (optional)</li>
+<li>Sorting</li>
+</ul>
+<h2 id="16-state-management">16. State Management<a class="headerlink" href="#16-state-management" title="Permanent link">&para;</a></h2>
+<p>Avoid prop drilling, and think about the different kinds of state separately.</p>
+<h3 id="ui-state">UI State<a class="headerlink" href="#ui-state" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>Current Step, Dark Mode, Sidebar, Dialogs
+</code></pre></div>
+<h3 id="upload-state">Upload State<a class="headerlink" href="#upload-state" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>Selected File, File Size, File Name, Errors
+</code></pre></div>
+<h3 id="preview-state">Preview State<a class="headerlink" href="#preview-state" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>Headers, Rows, Statistics
+</code></pre></div>
+<h3 id="import-state">Import State<a class="headerlink" href="#import-state" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>Progress, Current Batch, Remaining, Completed
+</code></pre></div>
+<h3 id="result-state">Result State<a class="headerlink" href="#result-state" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code>Imported, Skipped, Summary
+</code></pre></div>
+<p>Keep them separate instead of creating one massive state object.</p>
+<h2 id="17-api-layer">17. API Layer<a class="headerlink" href="#17-api-layer" title="Permanent link">&para;</a></h2>
+<p>Never call <code>fetch</code> inside components. Instead:</p>
+<div class="highlight"><pre><span></span><code>Component → Service → API → Backend
+</code></pre></div>
+<p>Benefits: easy to mock, easy to test, easy to replace.</p>
+<h2 id="18-custom-hooks">18. Custom Hooks<a class="headerlink" href="#18-custom-hooks" title="Permanent link">&para;</a></h2>
+<p>Think in terms of behaviors:</p>
+<ul>
+<li>Upload Logic</li>
+<li>Preview Logic</li>
+<li>Import Logic</li>
+<li>Progress Logic</li>
+</ul>
+<p>Components stay clean.</p>
+<h2 id="19-error-handling">19. Error Handling<a class="headerlink" href="#19-error-handling" title="Permanent link">&para;</a></h2>
+<p>Errors are part of UX. Differentiate between error classes:</p>
+<ul>
+<li>Upload Error</li>
+<li>Preview Error</li>
+<li>Import Error</li>
+<li>Network Error</li>
+<li>Server Error</li>
+<li>AI Error</li>
+</ul>
+<p>Each deserves different messaging.</p>
+<h2 id="20-loading-strategy">20. Loading Strategy<a class="headerlink" href="#20-loading-strategy" title="Permanent link">&para;</a></h2>
+<p>Every async action should have a skeleton or a progress indicator. Never blank screens.</p>
+<h2 id="21-accessibility">21. Accessibility<a class="headerlink" href="#21-accessibility" title="Permanent link">&para;</a></h2>
+<p>Support:</p>
+<ul>
+<li>Keyboard Upload</li>
+<li>ARIA Labels</li>
+<li>Focus Management</li>
+<li>Screen Readers</li>
+<li>Large Click Targets</li>
+<li>High Contrast</li>
+</ul>
+<p>These go beyond the minimum requirements but are standard in production applications.</p>
+<h2 id="22-responsive-design">22. Responsive Design<a class="headerlink" href="#22-responsive-design" title="Permanent link">&para;</a></h2>
+<p>Desktop layout:</p>
+<div class="highlight"><pre><span></span><code>Statistics
+Table
+Summary
+</code></pre></div>
+<p>Mobile layout:</p>
+<div class="highlight"><pre><span></span><code>Statistics → Cards → Scrollable Table
+</code></pre></div>
+<p>Never shrink the table — allow horizontal scrolling instead.</p>
+<h2 id="23-theme-system">23. Theme System<a class="headerlink" href="#23-theme-system" title="Permanent link">&para;</a></h2>
+<p>Implement three modes: Light, Dark, and System. Not strictly required, but expected of a polished product.</p>
+<h2 id="24-frontend-data-flow">24. Frontend Data Flow<a class="headerlink" href="#24-frontend-data-flow" title="Permanent link">&para;</a></h2>
+<p>The entire frontend flows in one direction:</p>
+<div class="highlight"><pre><span></span><code>User → Upload Component → Upload State → Preview Component → Confirm
+→ Import Service → Progress Store → Result Component → Dashboard
+</code></pre></div>
+<p>Everything flows in one direction. No circular dependencies.</p>
+<h2 id="25-communication-with-backend">25. Communication with Backend<a class="headerlink" href="#25-communication-with-backend" title="Permanent link">&para;</a></h2>
+<p>The frontend should treat the backend as a contract-driven service. A clean sequence looks like:</p>
+<pre class="mermaid"><code>sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    U-&gt;&gt;F: Upload CSV
+    F-&gt;&gt;B: POST /preview
+    B--&gt;&gt;F: Preview Data
+    U-&gt;&gt;F: Confirms import
+    F-&gt;&gt;B: POST /import
+    B--&gt;&gt;F: Import Started
+    B--&gt;&gt;F: Progress Updates
+    B--&gt;&gt;F: Final Result</code></pre>
+<p>Whether progress is implemented with polling or server-sent events can be decided later in the backend architecture (<a href="../07-backend-architecture/">Chapter 7 — Backend Architecture</a>), but the frontend should be designed so the underlying transport can change without affecting UI components.</p>
+<h2 id="26-frontend-design-principles">26. Frontend Design Principles<a class="headerlink" href="#26-frontend-design-principles" title="Permanent link">&para;</a></h2>
+<p>Every design decision in this chapter follows these principles:</p>
+<ul>
+<li><strong>Single Responsibility:</strong> Each component has one purpose.</li>
+<li><strong>Composition over Monoliths:</strong> Build complex screens from small reusable pieces.</li>
+<li><strong>Feature-Based Organization:</strong> Group code by business capability, not file type.</li>
+<li><strong>Unidirectional Data Flow:</strong> Data moves predictably from user actions to UI updates.</li>
+<li><strong>Backend as Source of Truth:</strong> Business rules and AI logic remain on the server.</li>
+<li><strong>Reusable Contracts:</strong> Components consume typed data models instead of raw API responses.</li>
+</ul>
+<h2 id="27-final-frontend-architecture">27. Final Frontend Architecture<a class="headerlink" href="#27-final-frontend-architecture" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>flowchart TD
+    U[User] --&gt; APP["App (Workflow Shell)"]
+    APP --&gt; UP[Upload Module]
+    APP --&gt; PV[Preview Module]
+    APP --&gt; RS[Result Module]
+    UP --&gt; SM[State Management]
+    PV --&gt; SM
+    RS --&gt; SM
+    SM --&gt; SVC[Service Layer]
+    SVC --&gt; HTTP[HTTP API Client]
+    HTTP --&gt; BE[Backend API]</code></pre>
+<p>The frontend never performs CRM extraction, normalization, or AI reasoning. Its role is to provide an intuitive workflow, maintain application state, and render the results of the backend pipeline (see <a href="../04-pipeline-architecture/">Chapter 4 — The Pipeline Architecture Mindset</a>).</p>
+<h2 id="implementation-tasks">Implementation Tasks<a class="headerlink" href="#implementation-tasks" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[ ] <strong>Task 6.1 — Workflow state machine.</strong> Implement the single-page workflow as a finite state machine (<code>Idle</code>, <code>Uploading</code>, <code>Preview Ready</code>, <code>Importing</code>, <code>Completed</code>, <code>Error</code>) driven by a single <code>currentState</code>.</li>
+<li>[ ] <strong>Task 6.2 — Feature-based folder structure.</strong> Set up the <code>src/</code> structure organized by feature (upload, preview, import, result, shared) with hooks, services, stores, lib, types, utils, constants, and styles.</li>
+<li>[ ] <strong>Task 6.3 — Component hierarchy.</strong> Build the App shell with Navbar, WorkflowStepper, UploadSection, PreviewSection, ImportProgress, ResultDashboard, and Footer as independent sections.</li>
+<li>[ ] <strong>Task 6.4 — State management.</strong> Implement separated UI, upload, preview, import, and result state stores instead of one massive state object.</li>
+<li>[ ] <strong>Task 6.5 — API service layer.</strong> Create a service layer and HTTP API client so no component calls <code>fetch</code> directly, with custom hooks for upload, preview, import, and progress behaviors.</li>
+<li>[ ] <strong>Task 6.6 — Reusable UI kit.</strong> Build the reusable component library (Button, Card, Badge, Alert, Table, Modal, Progress Bar, Stat Card, Upload Zone, Loading Overlay, Empty State, Error State).</li>
+<li>[ ] <strong>Task 6.7 — Responsive table and dashboard.</strong> Implement the powerful table component (sticky header, scrolling, virtualization, sorting) and the result dashboard with summary metrics plus imported/skipped tables.</li>
+<li>[ ] <strong>Task 6.8 — Error, loading, and accessibility strategy.</strong> Differentiate error classes with distinct messaging, add skeleton/progress states for every async action, and implement accessibility support (ARIA, keyboard, focus management, contrast).</li>
+<li>[ ] <strong>Task 6.9 — Backend interaction model.</strong> Implement the preview/import/progress contract so the progress transport (polling or server-sent events) can change without affecting UI components.</li>
+</ul>
+<hr />
+<h2 id="related-chapters">Related Chapters<a class="headerlink" href="#related-chapters" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../04-pipeline-architecture/">Chapter 4 — The Pipeline Architecture Mindset</a> — the pipeline whose stages this frontend visualizes and orchestrates</li>
+<li><a href="../05-system-architecture/">Chapter 5 — Product Thinking &amp; System Architecture</a> — the system architecture and UX objectives this frontend implements</li>
+<li><a href="../07-backend-architecture/">Chapter 7 — Backend Architecture</a> — the contract-driven backend this frontend communicates with</li>
+<li><a href="../15-observability/">Chapter 15 — Observability, Telemetry &amp; Operational Intelligence</a> — where import progress and statistics originate on the server side</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "toc.follow", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

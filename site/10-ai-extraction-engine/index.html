@@ -1,0 +1,2699 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Architecture documentation for an AI-powered data-ingestion platform that extracts CRM lead data from arbitrary CSV formats using LLMs.">
+      
+      
+      
+      
+        <link rel="prev" href="../09-data-normalization-engine/">
+      
+      
+        <link rel="next" href="../11-prompt-engineering/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>10. AI Extraction Engine - AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#chapter-10-ai-extraction-engine" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="AI Data Ingestion Engine (AIDE) — Architecture &amp; Engineering Handbook" class="md-header__button md-logo" aria-label="AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              10. AI Extraction Engine
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="AI Data Ingestion Engine (AIDE) — Architecture &amp; Engineering Handbook" class="md-nav__button md-logo" aria-label="AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part I — Foundations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part I — Foundations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-assignment-specification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1. Assignment Specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-solution-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2. Solution Analysis & Design Approach
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-engineering-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3. Engineering Roadmap & Methodology
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-pipeline-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4. The Pipeline Architecture Mindset
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part II — System & Application Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part II — System & Application Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-system-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    5. Product Thinking & System Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-frontend-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6. Frontend Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-backend-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    7. Backend Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part III — The Data Pipeline
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part III — The Data Pipeline
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-csv-processing-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    8. CSV Processing Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-data-normalization-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    9. Data Normalization Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part IV — The AI Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part IV — The AI Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10. AI Extraction Engine
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10. AI Extraction Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-the-biggest-mistake-developers-make" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. The Biggest Mistake Developers Make
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-what-is-the-ai-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. What Is the AI Engine?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-responsibilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Responsibilities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-ai-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. AI Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-internal-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Internal Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-why-ai-is-needed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Why AI Is Needed
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-semantic-understanding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Semantic Understanding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-ai-provider-abstraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. AI Provider Abstraction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-model-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Model Registry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-batch-manager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Batch Manager
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-intelligent-batching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Intelligent Batching
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-prompt-builder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Prompt Builder
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-context-builder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Context Builder
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-ai-provider" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. AI Provider
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-response-parser" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. Response Parser
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-json-repair-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. JSON Repair Layer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-schema-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. Schema Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18-confidence-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. Confidence Analysis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19-hallucination-prevention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. Hallucination Prevention
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#20-ai-output-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20. AI Output Contract
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#21-parallel-processing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21. Parallel Processing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-rate-limiting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22. Rate Limiting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-retry-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23. Retry Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#24-timeout-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24. Timeout Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#25-cost-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25. Cost Optimization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="25. Cost Optimization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#remove-unnecessary-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Remove unnecessary columns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remove-empty-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Remove empty values
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#shorten-headers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shorten headers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#batch-efficiently" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Batch efficiently
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#26-caching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26. Caching
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#27-observability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        27. Observability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#28-ai-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28. AI Metrics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#29-ai-engine-state-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        29. AI Engine State Machine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#30-ai-component-contracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        30. AI Component Contracts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#31-future-multi-agent-evolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        31. Future Multi-Agent Evolution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#32-ai-engine-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        32. AI Engine Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#33-engineering-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        33. Engineering Decisions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#34-architectural-improvement-hybrid-extraction-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        34. Architectural Improvement: Hybrid Extraction Engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Tasks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-chapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Chapters
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-prompt-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    11. Prompt Engineering & Semantic Intelligence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-semantic-intelligence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    12. Semantic Intelligence & Prompt Orchestration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../13-validation-trust-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    13. Validation, Business Rules & Trust Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part V — Running at Scale
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part V — Running at Scale
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../14-execution-orchestration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    14. Execution Engine, Orchestration & Concurrency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../15-observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    15. Observability, Telemetry & Operational Intelligence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-reliability-resilience/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    16. Reliability, Resilience & Fault Tolerance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-security-ai-safety/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    17. Security, Privacy & AI Safety
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part VI — Delivery & Evolution
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part VI — Delivery & Evolution
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../18-quality-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    18. Quality Engineering, Testing & Continuous Verification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../19-platform-engineering-devops/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    19. Platform Engineering, DevOps & Production Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../20-future-evolution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    20. Future Evolution & Platform Vision
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-the-biggest-mistake-developers-make" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. The Biggest Mistake Developers Make
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-what-is-the-ai-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. What Is the AI Engine?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-responsibilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Responsibilities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-ai-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. AI Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-internal-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Internal Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-why-ai-is-needed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Why AI Is Needed
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-semantic-understanding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Semantic Understanding
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-ai-provider-abstraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. AI Provider Abstraction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-model-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Model Registry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-batch-manager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Batch Manager
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-intelligent-batching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Intelligent Batching
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-prompt-builder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Prompt Builder
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-context-builder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Context Builder
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-ai-provider" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. AI Provider
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-response-parser" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. Response Parser
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-json-repair-layer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. JSON Repair Layer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-schema-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. Schema Validation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18-confidence-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. Confidence Analysis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19-hallucination-prevention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. Hallucination Prevention
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#20-ai-output-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20. AI Output Contract
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#21-parallel-processing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21. Parallel Processing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-rate-limiting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22. Rate Limiting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-retry-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23. Retry Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#24-timeout-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24. Timeout Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#25-cost-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25. Cost Optimization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="25. Cost Optimization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#remove-unnecessary-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Remove unnecessary columns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remove-empty-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Remove empty values
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#shorten-headers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shorten headers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#batch-efficiently" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Batch efficiently
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#26-caching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26. Caching
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#27-observability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        27. Observability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#28-ai-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28. AI Metrics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#29-ai-engine-state-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        29. AI Engine State Machine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#30-ai-component-contracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        30. AI Component Contracts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#31-future-multi-agent-evolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        31. Future Multi-Agent Evolution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#32-ai-engine-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        32. AI Engine Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#33-engineering-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        33. Engineering Decisions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#34-architectural-improvement-hybrid-extraction-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        34. Architectural Improvement: Hybrid Extraction Engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Tasks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-chapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Chapters
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="chapter-10-ai-extraction-engine">Chapter 10 — AI Extraction Engine<a class="headerlink" href="#chapter-10-ai-extraction-engine" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Goal:</strong> Design an enterprise-grade AI Extraction Engine that intelligently maps heterogeneous CSV data into the GrowEasy CRM schema while remaining deterministic, observable, provider-agnostic, fault-tolerant, and cost-efficient.</p>
+<p><strong>Core Principle:</strong> <strong>The AI is an expert consultant—not the owner of the system. The application remains the source of truth.</strong></p>
+</blockquote>
+<hr />
+<h2 id="1-the-biggest-mistake-developers-make">1. The Biggest Mistake Developers Make<a class="headerlink" href="#1-the-biggest-mistake-developers-make" title="Permanent link">&para;</a></h2>
+<p>Most AI applications look like this:</p>
+<div class="highlight"><pre><span></span><code>CSV → GPT → JSON
+</code></pre></div>
+<p>That is <strong>AI-first architecture</strong>. It is fragile.</p>
+<p>AIDE instead builds:</p>
+<div class="highlight"><pre><span></span><code>CSV → Deterministic Pipeline → AI → Deterministic Validation → Business Rules
+</code></pre></div>
+<p>AI becomes only one stage.</p>
+<h2 id="2-what-is-the-ai-engine">2. What Is the AI Engine?<a class="headerlink" href="#2-what-is-the-ai-engine" title="Permanent link">&para;</a></h2>
+<p>The AI Engine is <strong>not</strong> a wrapper around an LLM API. It is an intelligent subsystem responsible for:</p>
+<ul>
+<li>semantic understanding</li>
+<li>ambiguity resolution</li>
+<li>intelligent mapping</li>
+</ul>
+<p>It is <strong>not</strong> responsible for:</p>
+<ul>
+<li>validation</li>
+<li>business rules</li>
+<li>retries</li>
+<li>statistics</li>
+<li>formatting</li>
+<li>API responses</li>
+</ul>
+<h2 id="3-responsibilities">3. Responsibilities<a class="headerlink" href="#3-responsibilities" title="Permanent link">&para;</a></h2>
+<p>The AI Engine owns:</p>
+<ul>
+<li>Semantic field mapping</li>
+<li>Understanding unknown headers</li>
+<li>Extracting CRM fields</li>
+<li>Understanding notes</li>
+<li>Mapping statuses</li>
+<li>Understanding free-form text</li>
+</ul>
+<p>It never owns:</p>
+<ul>
+<li>Validation</li>
+<li>Skip logic</li>
+<li>Phone normalization</li>
+<li>Date formatting</li>
+<li>Statistics</li>
+</ul>
+<p>Normalization is handled upstream (see <a href="../09-data-normalization-engine/">Chapter 9 — Data Normalization Engine</a>); validation and skip logic downstream (see <a href="../13-validation-trust-engine/">Chapter 13 — Validation, Business Rules &amp; Trust Engine</a>).</p>
+<h2 id="4-ai-pipeline">4. AI Pipeline<a class="headerlink" href="#4-ai-pipeline" title="Permanent link">&para;</a></h2>
+<p>Instead of <code>Rows → OpenAI</code>, the engine is a pipeline of single-responsibility components:</p>
+<pre class="mermaid"><code>flowchart TD
+    A[Normalized Records] --&gt; B[Batch Builder]
+    B --&gt; C[Prompt Builder]
+    C --&gt; D[AI Provider]
+    D --&gt; E[JSON Validator]
+    E --&gt; F[Confidence Analyzer]
+    F --&gt; G[Pipeline]</code></pre>
+<p>Each component has one responsibility.</p>
+<h2 id="5-internal-architecture">5. Internal Architecture<a class="headerlink" href="#5-internal-architecture" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>flowchart TD
+    E[AI Extraction Engine] --&gt; BM[Batch Manager]
+    E --&gt; PB[Prompt Builder]
+    E --&gt; MR[Model Registry]
+    BM --&gt; PA[AI Provider Adapter]
+    PB --&gt; PA
+    MR --&gt; PA
+    PA --&gt; RP[Response Parser]
+    RP --&gt; SV[Schema Validator]
+    SV --&gt; CA[Confidence Analyzer]
+    CA --&gt; ER[Extraction Result]</code></pre>
+<p>Notice: the provider is just one component.</p>
+<h2 id="6-why-ai-is-needed">6. Why AI Is Needed<a class="headerlink" href="#6-why-ai-is-needed" title="Permanent link">&para;</a></h2>
+<p>Deterministic logic cannot solve headers like:</p>
+<div class="highlight"><pre><span></span><code>Lead Contact  →  Phone?
+</code></pre></div>
+<p>or:</p>
+<div class="highlight"><pre><span></span><code>Primary Reach  →  Email? Phone? Owner?
+</code></pre></div>
+<p>Only semantic understanding solves that. That is where AI shines.</p>
+<h2 id="7-semantic-understanding">7. Semantic Understanding<a class="headerlink" href="#7-semantic-understanding" title="Permanent link">&para;</a></h2>
+<p>Different CSVs express the same concept with different headers:</p>
+<table>
+<thead>
+<tr>
+<th>CSV header</th>
+<th>Value</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Customer</code></td>
+<td>John</td>
+<td>Name</td>
+</tr>
+<tr>
+<td><code>Lead Name</code></td>
+<td>John</td>
+<td>Name</td>
+</tr>
+<tr>
+<td><code>Owner</code></td>
+<td>John</td>
+<td>Lead Owner</td>
+</tr>
+</tbody>
+</table>
+<p>Only AI understands that <code>Customer → Name</code> while <code>Owner → Lead Owner</code>. That is semantic mapping. The prompt strategies behind it are covered in <a href="../11-prompt-engineering/">Chapter 11 — Prompt Engineering &amp; Semantic Intelligence</a>.</p>
+<h2 id="8-ai-provider-abstraction">8. AI Provider Abstraction<a class="headerlink" href="#8-ai-provider-abstraction" title="Permanent link">&para;</a></h2>
+<p>Never directly call OpenAI. Instead:</p>
+<div class="highlight"><pre><span></span><code>Pipeline → AI Adapter → Provider
+</code></pre></div>
+<p>The provider could be:</p>
+<div class="highlight"><pre><span></span><code>OpenAI
+Claude
+Gemini
+Local Model
+Azure OpenAI
+</code></pre></div>
+<p>Tomorrow, switch providers — no business logic changes.</p>
+<h2 id="9-model-registry">9. Model Registry<a class="headerlink" href="#9-model-registry" title="Permanent link">&para;</a></h2>
+<p>Never hardcode models. Instead, a Model Registry offers, for example:</p>
+<div class="highlight"><pre><span></span><code>GPT-4.1
+GPT-4o
+Claude Sonnet
+Gemini Pro
+</code></pre></div>
+<p>Configuration decides, not code.</p>
+<h2 id="10-batch-manager">10. Batch Manager<a class="headerlink" href="#10-batch-manager" title="Permanent link">&para;</a></h2>
+<p>Never send 5000 rows to the AI in one request. Instead:</p>
+<div class="highlight"><pre><span></span><code>5000 rows → batches of 50 → processed in parallel
+</code></pre></div>
+<p>Advantages:</p>
+<ul>
+<li>smaller context</li>
+<li>easier retry</li>
+<li>lower latency</li>
+<li>lower cost</li>
+</ul>
+<h2 id="11-intelligent-batching">11. Intelligent Batching<a class="headerlink" href="#11-intelligent-batching" title="Permanent link">&para;</a></h2>
+<p>Instead of fixed batches, batch by:</p>
+<ul>
+<li>token count</li>
+<li>row complexity</li>
+<li>average cell size</li>
+</ul>
+<p>Example: 100 short rows → one batch; 20 huge rows → one batch. Much smarter than a fixed row count.</p>
+<h2 id="12-prompt-builder">12. Prompt Builder<a class="headerlink" href="#12-prompt-builder" title="Permanent link">&para;</a></h2>
+<p>The Prompt Builder is <strong>not</strong> the prompt. It constructs prompts dynamically:</p>
+<div class="highlight"><pre><span></span><code>Batch + Metadata + Rules + Schema  →  Prompt
+</code></pre></div>
+<p>This keeps prompt generation centralized.</p>
+<h2 id="13-context-builder">13. Context Builder<a class="headerlink" href="#13-context-builder" title="Permanent link">&para;</a></h2>
+<p>Instead of sending only rows, send:</p>
+<div class="highlight"><pre><span></span><code>Headers → Column Types → Metadata → Rows → Expected Schema
+</code></pre></div>
+<p>The richer the context, the better the mapping.</p>
+<h2 id="14-ai-provider">14. AI Provider<a class="headerlink" href="#14-ai-provider" title="Permanent link">&para;</a></h2>
+<p>The provider only does:</p>
+<div class="highlight"><pre><span></span><code>Prompt → LLM → Response
+</code></pre></div>
+<p>Nothing else. No retries. No validation. No parsing.</p>
+<h2 id="15-response-parser">15. Response Parser<a class="headerlink" href="#15-response-parser" title="Permanent link">&para;</a></h2>
+<p>The AI returns text; the pipeline needs a structured object. The parser converts:</p>
+<div class="highlight"><pre><span></span><code>LLM Output → JSON Object
+</code></pre></div>
+<p>before validation.</p>
+<h2 id="16-json-repair-layer">16. JSON Repair Layer<a class="headerlink" href="#16-json-repair-layer" title="Permanent link">&para;</a></h2>
+<p>Sometimes the AI returns broken JSON:</p>
+<div class="highlight"><pre><span></span><code>{
+&quot;name&quot;:&quot;John&quot;
+</code></pre></div>
+<p>Instead of immediately retrying, attempt repair:</p>
+<div class="highlight"><pre><span></span><code>Broken JSON → Repair → Valid? → Continue
+                        ↓
+                    Else Retry
+</code></pre></div>
+<p>This saves tokens.</p>
+<h2 id="17-schema-validation">17. Schema Validation<a class="headerlink" href="#17-schema-validation" title="Permanent link">&para;</a></h2>
+<p>Every response must satisfy the CRM schema. Examples:</p>
+<div class="highlight"><pre><span></span><code>email       →  string|null
+mobile      →  string|null
+crm_status  →  enum
+</code></pre></div>
+<p>Invalid? Reject.</p>
+<h2 id="18-confidence-analysis">18. Confidence Analysis<a class="headerlink" href="#18-confidence-analysis" title="Permanent link">&para;</a></h2>
+<p>Even when JSON is valid, confidence may be poor. Example — the AI maps:</p>
+<div class="highlight"><pre><span></span><code>Manager → Company
+</code></pre></div>
+<p>Suspicious. The confidence layer can flag it as <code>Low Confidence</code>; later, this can feed a human-review workflow (optional future feature).</p>
+<h2 id="19-hallucination-prevention">19. Hallucination Prevention<a class="headerlink" href="#19-hallucination-prevention" title="Permanent link">&para;</a></h2>
+<p>The AI should never invent values — for example, filling in <code>Country → India</code> unless evidence exists.</p>
+<p>Rules:</p>
+<ul>
+<li>Never guess</li>
+<li>Never invent</li>
+<li>Never fill missing values</li>
+<li>Unknown → <code>null</code></li>
+</ul>
+<p>This is critical.</p>
+<h2 id="20-ai-output-contract">20. AI Output Contract<a class="headerlink" href="#20-ai-output-contract" title="Permanent link">&para;</a></h2>
+<p>The AI must only return a <strong>structured CRM object</strong>:</p>
+<ul>
+<li>No explanations</li>
+<li>No markdown</li>
+<li>No reasoning</li>
+<li>No comments</li>
+</ul>
+<p>Only valid JSON. This dramatically simplifies parsing.</p>
+<h2 id="21-parallel-processing">21. Parallel Processing<a class="headerlink" href="#21-parallel-processing" title="Permanent link">&para;</a></h2>
+<p>Suppose there are 20 batches. Instead of processing them sequentially (<code>1 → 2 → 3</code>), process several at once in parallel — but respect provider limits. Concurrency should be configurable. Orchestration details are covered in <a href="../14-execution-orchestration/">Chapter 14 — Execution Engine, Orchestration &amp; Concurrency</a>.</p>
+<h2 id="22-rate-limiting">22. Rate Limiting<a class="headerlink" href="#22-rate-limiting" title="Permanent link">&para;</a></h2>
+<p>AI providers have limits. The engine needs:</p>
+<div class="highlight"><pre><span></span><code>Queue → Worker → Wait → Retry
+</code></pre></div>
+<p>Never spam the API.</p>
+<h2 id="23-retry-strategy">23. Retry Strategy<a class="headerlink" href="#23-retry-strategy" title="Permanent link">&para;</a></h2>
+<p>Each failure class has its own handling:</p>
+<table>
+<thead>
+<tr>
+<th>Failure</th>
+<th>Response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Timeout</td>
+<td>Retry</td>
+</tr>
+<tr>
+<td>Rate limit</td>
+<td>Exponential backoff</td>
+</tr>
+<tr>
+<td>Malformed JSON</td>
+<td>Repair, then retry</td>
+</tr>
+<tr>
+<td>Provider down</td>
+<td>Fail the batch, continue the pipeline</td>
+</tr>
+</tbody>
+</table>
+<p>Never crash the whole import.</p>
+<h2 id="24-timeout-strategy">24. Timeout Strategy<a class="headerlink" href="#24-timeout-strategy" title="Permanent link">&para;</a></h2>
+<p>Never wait forever:</p>
+<div class="highlight"><pre><span></span><code>30 seconds → Timeout → Retry
+</code></pre></div>
+<p>Timeouts should be configurable.</p>
+<h2 id="25-cost-optimization">25. Cost Optimization<a class="headerlink" href="#25-cost-optimization" title="Permanent link">&para;</a></h2>
+<p>AI costs money. Optimization ideas:</p>
+<h3 id="remove-unnecessary-columns">Remove unnecessary columns<a class="headerlink" href="#remove-unnecessary-columns" title="Permanent link">&para;</a></h3>
+<p>Instead of sending 50 columns, send the 18 useful ones.</p>
+<h3 id="remove-empty-values">Remove empty values<a class="headerlink" href="#remove-empty-values" title="Permanent link">&para;</a></h3>
+<p>Instead of sending <code>City: null</code>, don't include empty fields in the prompt unless context requires them.</p>
+<h3 id="shorten-headers">Shorten headers<a class="headerlink" href="#shorten-headers" title="Permanent link">&para;</a></h3>
+<p>Internally map <code>Customer Email Address → email</code>. Fewer tokens.</p>
+<h3 id="batch-efficiently">Batch efficiently<a class="headerlink" href="#batch-efficiently" title="Permanent link">&para;</a></h3>
+<p>Avoid 1 row per request.</p>
+<h2 id="26-caching">26. Caching<a class="headerlink" href="#26-caching" title="Permanent link">&para;</a></h2>
+<p>Imagine identical imports: same batch → same result. A future optimization:</p>
+<div class="highlight"><pre><span></span><code>Prompt Hash → Cache → Reuse
+</code></pre></div>
+<p>No API call. Huge savings.</p>
+<h2 id="27-observability">27. Observability<a class="headerlink" href="#27-observability" title="Permanent link">&para;</a></h2>
+<p>Track everything:</p>
+<div class="highlight"><pre><span></span><code>Model Used → Tokens → Latency → Retries → Failures → Cost Estimate → Success Rate
+</code></pre></div>
+<p>Later, this feeds a dashboard (see <a href="../15-observability/">Chapter 15 — Observability, Telemetry &amp; Operational Intelligence</a>).</p>
+<h2 id="28-ai-metrics">28. AI Metrics<a class="headerlink" href="#28-ai-metrics" title="Permanent link">&para;</a></h2>
+<p>Monitor:</p>
+<ul>
+<li>Average response time</li>
+<li>Average tokens</li>
+<li>Average records per second</li>
+<li>Average confidence</li>
+<li>Batch failure rate</li>
+<li>Provider errors</li>
+</ul>
+<p>These metrics tell you if the system is healthy.</p>
+<h2 id="29-ai-engine-state-machine">29. AI Engine State Machine<a class="headerlink" href="#29-ai-engine-state-machine" title="Permanent link">&para;</a></h2>
+<p>Every batch follows a predictable lifecycle:</p>
+<div class="highlight"><pre><span></span><code>Pending → Prompt Generated → Submitted → Processing → Response Received → Validated → Completed
+</code></pre></div>
+<p>or, on error:</p>
+<div class="highlight"><pre><span></span><code>… → Failed → Retry → Completed
+</code></pre></div>
+<p>State machines eliminate ambiguity.</p>
+<h2 id="30-ai-component-contracts">30. AI Component Contracts<a class="headerlink" href="#30-ai-component-contracts" title="Permanent link">&para;</a></h2>
+<p>Every module has one responsibility:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Batch Manager</td>
+<td>Build optimal batches</td>
+</tr>
+<tr>
+<td>Prompt Builder</td>
+<td>Construct prompts</td>
+</tr>
+<tr>
+<td>Context Builder</td>
+<td>Prepare semantic context</td>
+</tr>
+<tr>
+<td>Provider Adapter</td>
+<td>Talk to LLM</td>
+</tr>
+<tr>
+<td>Response Parser</td>
+<td>Convert text → JSON</td>
+</tr>
+<tr>
+<td>JSON Repair</td>
+<td>Fix malformed responses</td>
+</tr>
+<tr>
+<td>Schema Validator</td>
+<td>Validate structure</td>
+</tr>
+<tr>
+<td>Confidence Analyzer</td>
+<td>Detect suspicious mappings</td>
+</tr>
+<tr>
+<td>Metrics Collector</td>
+<td>Measure AI performance</td>
+</tr>
+</tbody>
+</table>
+<p>No overlap.</p>
+<h2 id="31-future-multi-agent-evolution">31. Future Multi-Agent Evolution<a class="headerlink" href="#31-future-multi-agent-evolution" title="Permanent link">&para;</a></h2>
+<p>Today, one AI produces the CRM JSON. In the future, the same pipeline can host specialized agents:</p>
+<div class="highlight"><pre><span></span><code>Semantic Mapping Agent
+        ↓
+Contact Extraction Agent
+        ↓
+Address Extraction Agent
+        ↓
+CRM Status Agent
+        ↓
+Validation Agent
+        ↓
+Merge Agent
+</code></pre></div>
+<p>This architecture naturally supports specialized agents without changing the pipeline. See <a href="../20-future-evolution/">Chapter 20 — Future Evolution &amp; Platform Vision</a>.</p>
+<h2 id="32-ai-engine-architecture">32. AI Engine Architecture<a class="headerlink" href="#32-ai-engine-architecture" title="Permanent link">&para;</a></h2>
+<p>The full end-to-end flow of the engine:</p>
+<div class="highlight"><pre><span></span><code>AI Extraction Engine
+        │
+  Batch Manager
+        ▼
+ Context Builder
+        ▼
+ Prompt Builder
+        ▼
+Provider Adapter
+        ▼
+ Response Parser
+        ▼
+   JSON Repair
+        ▼
+Schema Validator
+        ▼
+Confidence Analyzer
+        ▼
+Metrics Collector
+        ▼
+Structured CRM Data
+</code></pre></div>
+<p>Every stage has a well-defined contract and can evolve independently.</p>
+<h2 id="33-engineering-decisions">33. Engineering Decisions<a class="headerlink" href="#33-engineering-decisions" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Provider abstraction</td>
+<td>Swap LLMs without affecting business logic</td>
+</tr>
+<tr>
+<td>Dynamic prompt builder</td>
+<td>Centralized prompt management</td>
+</tr>
+<tr>
+<td>Token-aware batching</td>
+<td>Lower cost and higher throughput</td>
+</tr>
+<tr>
+<td>Structured JSON output</td>
+<td>Easier validation</td>
+</tr>
+<tr>
+<td>JSON repair before retry</td>
+<td>Reduce unnecessary API calls</td>
+</tr>
+<tr>
+<td>Schema validation</td>
+<td>Never trust raw AI output</td>
+</tr>
+<tr>
+<td>Confidence analysis</td>
+<td>Detect ambiguous mappings</td>
+</tr>
+<tr>
+<td>Metrics collection</td>
+<td>Production observability</td>
+</tr>
+<tr>
+<td>Parallel execution</td>
+<td>Faster imports while respecting rate limits</td>
+</tr>
+</tbody>
+</table>
+<h2 id="34-architectural-improvement-hybrid-extraction-engine">34. Architectural Improvement: Hybrid Extraction Engine<a class="headerlink" href="#34-architectural-improvement-hybrid-extraction-engine" title="Permanent link">&para;</a></h2>
+<p>The assignment assumes <strong>every row goes to the LLM</strong>. A production system shouldn't do that. Instead, introduce a <strong>Hybrid Extraction Engine</strong>:</p>
+<pre class="mermaid"><code>flowchart TD
+    A[Normalized Records] --&gt; B[Deterministic Classifier]
+    B --&gt; C["High Confidence (No AI Needed)"]
+    B --&gt; D["Ambiguous Records (Needs AI)"]
+    C --&gt; E[CRM Mapping]
+    D --&gt; F[AI Extraction Engine]
+    E --&gt; G[Validation Pipeline]
+    F --&gt; G</code></pre>
+<p>Examples:</p>
+<ul>
+<li>A value matching an email regex does <strong>not</strong> need AI to know it's an email.</li>
+<li>A value matching a phone pattern does <strong>not</strong> need AI to know it's a phone.</li>
+<li>A header literally named <code>email</code> or <code>phone</code> is deterministic.</li>
+</ul>
+<p>Reserve the LLM for what it's uniquely good at:</p>
+<ul>
+<li>Semantic column mapping (<code>Lead Contact</code>, <code>Primary Reach</code>, <code>Client Representative</code>)</li>
+<li>Interpreting free-form notes</li>
+<li>Resolving ambiguous relationships</li>
+<li>Mapping to constrained CRM enums</li>
+</ul>
+<blockquote>
+<p><strong>Design Rationale:</strong> This hybrid architecture yields <strong>lower AI cost</strong>, <strong>lower latency</strong>, <strong>higher accuracy</strong>, <strong>fewer hallucinations</strong>, <strong>easier testing</strong>, and <strong>better scalability</strong>. It is the kind of design decision associated with production experience rather than assignment-driven development.</p>
+</blockquote>
+<h2 id="implementation-tasks">Implementation Tasks<a class="headerlink" href="#implementation-tasks" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[ ] <strong>Task 10.1 — Provider-agnostic AI architecture.</strong> Build an AI adapter layer so the pipeline never calls a specific LLM provider directly.</li>
+<li>[ ] <strong>Task 10.2 — Token-aware batch manager.</strong> Split normalized records into batches sized by token count, row complexity, and average cell size.</li>
+<li>[ ] <strong>Task 10.3 — Dynamic prompt builder.</strong> Construct prompts centrally from batch, metadata, rules, and the expected schema.</li>
+<li>[ ] <strong>Task 10.4 — Context builder.</strong> Assemble headers, column types, metadata, rows, and expected schema into rich semantic context for each request.</li>
+<li>[ ] <strong>Task 10.5 — Provider adapter.</strong> Implement the minimal <code>Prompt → LLM → Response</code> component with no retries, validation, or parsing.</li>
+<li>[ ] <strong>Task 10.6 — Response parser.</strong> Convert raw LLM text output into structured JSON objects.</li>
+<li>[ ] <strong>Task 10.7 — JSON repair layer.</strong> Attempt to repair malformed JSON responses before spending tokens on a retry.</li>
+<li>[ ] <strong>Task 10.8 — Schema validation.</strong> Validate every AI response against the CRM schema (types and enums) and reject invalid output.</li>
+<li>[ ] <strong>Task 10.9 — Confidence analysis.</strong> Flag suspicious or low-confidence field mappings for downstream handling.</li>
+<li>[ ] <strong>Task 10.10 — Retry and timeout strategies.</strong> Implement per-failure-class handling: retry on timeout, exponential backoff on rate limits, repair-then-retry on malformed JSON, fail-batch-and-continue when the provider is down, with configurable timeouts.</li>
+<li>[ ] <strong>Task 10.11 — Rate limiting.</strong> Add a queue/worker mechanism that respects provider limits and never spams the API.</li>
+<li>[ ] <strong>Task 10.12 — Observability and AI metrics.</strong> Collect model, token, latency, retry, failure, cost, confidence, and success-rate metrics per batch.</li>
+<li>[ ] <strong>Task 10.13 — Parallel execution model.</strong> Process batches concurrently with configurable concurrency, respecting provider limits.</li>
+<li>[ ] <strong>Task 10.14 — Model registry.</strong> Drive model selection (GPT-4.1, GPT-4o, Claude Sonnet, Gemini Pro, …) from configuration, not code.</li>
+<li>[ ] <strong>Task 10.15 — Prompt-hash caching.</strong> Cache extraction results keyed by prompt hash so identical batches skip the API call.</li>
+<li>[ ] <strong>Task 10.16 — Hybrid deterministic + AI extraction.</strong> Add a deterministic classifier that routes high-confidence records straight to CRM mapping and sends only ambiguous records to the LLM.</li>
+<li>[ ] <strong>Task 10.17 — Multi-agent evolution path.</strong> Keep component contracts stable so specialized agents (mapping, contact, address, status, validation, merge) can replace the single AI stage later.</li>
+</ul>
+<hr />
+<h2 id="related-chapters">Related Chapters<a class="headerlink" href="#related-chapters" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../09-data-normalization-engine/">Chapter 9 — Data Normalization Engine</a> — supplies the clean canonical records this engine extracts from</li>
+<li><a href="../11-prompt-engineering/">Chapter 11 — Prompt Engineering &amp; Semantic Intelligence</a> — engineers the prompts the Prompt Builder constructs</li>
+<li><a href="../12-semantic-intelligence/">Chapter 12 — Semantic Intelligence &amp; Prompt Orchestration</a> — orchestrates the semantic-mapping intelligence this engine relies on</li>
+<li><a href="../13-validation-trust-engine/">Chapter 13 — Validation, Business Rules &amp; Trust Engine</a> — the deterministic validation stage that never trusts raw AI output</li>
+<li><a href="../14-execution-orchestration/">Chapter 14 — Execution Engine, Orchestration &amp; Concurrency</a> — runs the parallel batch execution and rate-limited workers</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "toc.follow", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,71 @@
+site_name: AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook
+site_description: >-
+  Architecture documentation for an AI-powered data-ingestion platform that
+  extracts CRM lead data from arbitrary CSV formats using LLMs.
+
+docs_dir: docs
+
+# SUMMARY.md is the GitBook table of contents; MkDocs uses the nav below instead.
+not_in_nav: |
+  SUMMARY.md
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - toc.follow
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - tables
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - toc:
+      permalink: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+nav:
+  - Introduction: index.md
+  - "Part I — Foundations":
+      - "1. Assignment Specification": 01-assignment-specification.md
+      - "2. Solution Analysis & Design Approach": 02-solution-analysis.md
+      - "3. Engineering Roadmap & Methodology": 03-engineering-roadmap.md
+      - "4. The Pipeline Architecture Mindset": 04-pipeline-architecture.md
+  - "Part II — System & Application Architecture":
+      - "5. Product Thinking & System Architecture": 05-system-architecture.md
+      - "6. Frontend Architecture": 06-frontend-architecture.md
+      - "7. Backend Architecture": 07-backend-architecture.md
+  - "Part III — The Data Pipeline":
+      - "8. CSV Processing Engine": 08-csv-processing-engine.md
+      - "9. Data Normalization Engine": 09-data-normalization-engine.md
+  - "Part IV — The AI Core":
+      - "10. AI Extraction Engine": 10-ai-extraction-engine.md
+      - "11. Prompt Engineering & Semantic Intelligence": 11-prompt-engineering.md
+      - "12. Semantic Intelligence & Prompt Orchestration": 12-semantic-intelligence.md
+      - "13. Validation, Business Rules & Trust Engine": 13-validation-trust-engine.md
+  - "Part V — Running at Scale":
+      - "14. Execution Engine, Orchestration & Concurrency": 14-execution-orchestration.md
+      - "15. Observability, Telemetry & Operational Intelligence": 15-observability.md
+      - "16. Reliability, Resilience & Fault Tolerance": 16-reliability-resilience.md
+      - "17. Security, Privacy & AI Safety": 17-security-ai-safety.md
+  - "Part VI — Delivery & Evolution":
+      - "18. Quality Engineering, Testing & Continuous Verification": 18-quality-engineering.md
+      - "19. Platform Engineering, DevOps & Production Deployment": 19-platform-engineering-devops.md
+      - "20. Future Evolution & Platform Vision": 20-future-evolution.md

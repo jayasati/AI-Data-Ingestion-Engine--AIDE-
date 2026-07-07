@@ -1,0 +1,2396 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Architecture documentation for an AI-powered data-ingestion platform that extracts CRM lead data from arbitrary CSV formats using LLMs.">
+      
+      
+      
+      
+        <link rel="prev" href="../08-csv-processing-engine/">
+      
+      
+        <link rel="next" href="../10-ai-extraction-engine/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>9. Data Normalization Engine - AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#chapter-9-data-normalization-engine" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="AI Data Ingestion Engine (AIDE) — Architecture &amp; Engineering Handbook" class="md-header__button md-logo" aria-label="AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              9. Data Normalization Engine
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="AI Data Ingestion Engine (AIDE) — Architecture &amp; Engineering Handbook" class="md-nav__button md-logo" aria-label="AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part I — Foundations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part I — Foundations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-assignment-specification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1. Assignment Specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-solution-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2. Solution Analysis & Design Approach
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-engineering-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3. Engineering Roadmap & Methodology
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-pipeline-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4. The Pipeline Architecture Mindset
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part II — System & Application Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part II — System & Application Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-system-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    5. Product Thinking & System Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-frontend-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6. Frontend Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-backend-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    7. Backend Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part III — The Data Pipeline
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part III — The Data Pipeline
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-csv-processing-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    8. CSV Processing Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    9. Data Normalization Engine
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    9. Data Normalization Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-why-a-normalization-engine-exists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Why a Normalization Engine Exists
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-what-is-data-normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. What is Data Normalization?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-philosophy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Philosophy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-responsibilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Responsibilities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-stage-1-whitespace-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Stage 1 — Whitespace Cleanup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-stage-2-empty-value-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Stage 2 — Empty Value Detection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-stage-3-unicode-normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Stage 3 — Unicode Normalization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-stage-4-email-normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Stage 4 — Email Normalization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-multiple-emails" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Multiple Emails
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-phone-number-normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Phone Number Normalization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-multiple-phone-numbers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Multiple Phone Numbers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-date-normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Date Normalization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-name-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Name Cleanup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-location-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. Location Cleanup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-company-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. Company Cleanup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-boolean-normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. Boolean Normalization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18-numeric-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. Numeric Cleanup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19-text-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. Text Cleanup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#20-duplicate-value-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20. Duplicate Value Detection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#21-noise-removal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21. Noise Removal
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-column-value-profiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22. Column Value Profiling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-normalization-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23. Normalization Metadata
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#24-normalization-rules-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24. Normalization Rules Engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#25-error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25. Error Handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#26-output-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26. Output Contract
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#27-component-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        27. Component Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#28-why-this-matters-for-ai" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28. Why This Matters for AI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#29-engineering-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        29. Engineering Decisions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#30-production-enhancement-transformation-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        30. Production Enhancement: Transformation History
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Tasks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-chapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Chapters
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part IV — The AI Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part IV — The AI Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-ai-extraction-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10. AI Extraction Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-prompt-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    11. Prompt Engineering & Semantic Intelligence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-semantic-intelligence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    12. Semantic Intelligence & Prompt Orchestration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../13-validation-trust-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    13. Validation, Business Rules & Trust Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part V — Running at Scale
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part V — Running at Scale
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../14-execution-orchestration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    14. Execution Engine, Orchestration & Concurrency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../15-observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    15. Observability, Telemetry & Operational Intelligence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-reliability-resilience/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    16. Reliability, Resilience & Fault Tolerance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-security-ai-safety/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    17. Security, Privacy & AI Safety
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part VI — Delivery & Evolution
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part VI — Delivery & Evolution
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../18-quality-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    18. Quality Engineering, Testing & Continuous Verification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../19-platform-engineering-devops/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    19. Platform Engineering, DevOps & Production Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../20-future-evolution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    20. Future Evolution & Platform Vision
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-why-a-normalization-engine-exists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Why a Normalization Engine Exists
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-what-is-data-normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. What is Data Normalization?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-philosophy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Philosophy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-responsibilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Responsibilities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-stage-1-whitespace-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Stage 1 — Whitespace Cleanup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-stage-2-empty-value-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Stage 2 — Empty Value Detection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-stage-3-unicode-normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Stage 3 — Unicode Normalization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-stage-4-email-normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Stage 4 — Email Normalization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-multiple-emails" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Multiple Emails
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-phone-number-normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Phone Number Normalization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-multiple-phone-numbers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Multiple Phone Numbers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-date-normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Date Normalization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-name-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Name Cleanup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-location-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. Location Cleanup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-company-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. Company Cleanup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-boolean-normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. Boolean Normalization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18-numeric-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. Numeric Cleanup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19-text-cleanup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. Text Cleanup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#20-duplicate-value-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20. Duplicate Value Detection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#21-noise-removal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21. Noise Removal
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-column-value-profiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22. Column Value Profiling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-normalization-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23. Normalization Metadata
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#24-normalization-rules-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24. Normalization Rules Engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#25-error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25. Error Handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#26-output-contract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26. Output Contract
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#27-component-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        27. Component Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#28-why-this-matters-for-ai" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28. Why This Matters for AI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#29-engineering-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        29. Engineering Decisions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#30-production-enhancement-transformation-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        30. Production Enhancement: Transformation History
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Tasks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-chapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Chapters
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="chapter-9-data-normalization-engine">Chapter 9 — Data Normalization Engine<a class="headerlink" href="#chapter-9-data-normalization-engine" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Goal:</strong> Transform messy, inconsistent, real-world CSV values into a clean, standardized dataset before any AI processing.</p>
+<p><strong>Core Principle:</strong> <strong>Every piece of deterministic cleaning done before the LLM reduces cost, improves accuracy, and lowers hallucinations.</strong></p>
+</blockquote>
+<hr />
+<h2 id="1-why-a-normalization-engine-exists">1. Why a Normalization Engine Exists<a class="headerlink" href="#1-why-a-normalization-engine-exists" title="Permanent link">&para;</a></h2>
+<p>This is one of the biggest differences between a demo project and a production system.</p>
+<p>A naive implementation looks like this:</p>
+<div class="highlight"><pre><span></span><code>CSV → OpenAI → CRM JSON
+</code></pre></div>
+<p>AIDE instead inserts deterministic stages around the AI:</p>
+<pre class="mermaid"><code>flowchart LR
+    A[CSV] --&gt; B[Parsing]
+    B --&gt; C[Normalization]
+    C --&gt; D[AI]
+    D --&gt; E[Validation]</code></pre>
+<p>Why? Because AI should understand <strong>meaning</strong>, not fix formatting mistakes.</p>
+<h2 id="2-what-is-data-normalization">2. What is Data Normalization?<a class="headerlink" href="#2-what-is-data-normalization" title="Permanent link">&para;</a></h2>
+<p>Normalization means converting different representations of the same information into one consistent representation.</p>
+<p>Example — input:</p>
+<div class="highlight"><pre><span></span><code>John
+ john
+JOHN
+John
+John
+</code></pre></div>
+<p>Output:</p>
+<div class="highlight"><pre><span></span><code>John
+</code></pre></div>
+<p>Another example — input:</p>
+<div class="highlight"><pre><span></span><code>+91 98765-43210
+9876543210
+(+91)9876543210
+91-9876543210
+</code></pre></div>
+<p>Output:</p>
+<div class="highlight"><pre><span></span><code>+919876543210
+</code></pre></div>
+<p>The meaning never changes. Only the representation changes.</p>
+<h2 id="3-philosophy">3. Philosophy<a class="headerlink" href="#3-philosophy" title="Permanent link">&para;</a></h2>
+<p>Think of this engine as a <strong>Data Refinery</strong>: raw oil enters the refinery and petrol comes out. Similarly:</p>
+<div class="highlight"><pre><span></span><code>Messy Data → Normalization → Clean Data
+</code></pre></div>
+<p>Only then does the data reach the AI.</p>
+<h2 id="4-pipeline">4. Pipeline<a class="headerlink" href="#4-pipeline" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>flowchart TD
+    A[Parsed Records] --&gt; B[Whitespace Cleanup]
+    B --&gt; C[Unicode Cleanup]
+    C --&gt; D[Null Detection]
+    D --&gt; E[Phone Normalization]
+    E --&gt; F[Email Normalization]
+    F --&gt; G[Date Normalization]
+    G --&gt; H[Location Cleanup]
+    H --&gt; I[Duplicate Detection]
+    I --&gt; J[Canonical Records]</code></pre>
+<h2 id="5-responsibilities">5. Responsibilities<a class="headerlink" href="#5-responsibilities" title="Permanent link">&para;</a></h2>
+<p>This engine owns:</p>
+<ul>
+<li>Cleaning</li>
+<li>Formatting</li>
+<li>Standardization</li>
+<li>Type refinement</li>
+</ul>
+<p>It never:</p>
+<ul>
+<li>infers CRM fields</li>
+<li>maps semantics</li>
+<li>calls AI</li>
+</ul>
+<p>Semantic mapping is the job of the AI Extraction Engine — see <a href="../10-ai-extraction-engine/">Chapter 10 — AI Extraction Engine</a>.</p>
+<h2 id="6-stage-1-whitespace-cleanup">6. Stage 1 — Whitespace Cleanup<a class="headerlink" href="#6-stage-1-whitespace-cleanup" title="Permanent link">&para;</a></h2>
+<p>Real CSVs contain values like:</p>
+<div class="highlight"><pre><span></span><code>&quot; John &quot;
+&quot;   Mumbai&quot;
+&quot;john@gmail.com   &quot;
+</code></pre></div>
+<p>Normalize to:</p>
+<div class="highlight"><pre><span></span><code>John
+Mumbai
+john@gmail.com
+</code></pre></div>
+<p>Also collapse repeated spaces:</p>
+<div class="highlight"><pre><span></span><code>John      Doe  →  John Doe
+</code></pre></div>
+<h2 id="7-stage-2-empty-value-detection">7. Stage 2 — Empty Value Detection<a class="headerlink" href="#7-stage-2-empty-value-detection" title="Permanent link">&para;</a></h2>
+<p>Many exports represent empty values differently:</p>
+<div class="highlight"><pre><span></span><code>NULL
+null
+N/A
+NA
+-
+--
+Unknown
+Empty String
+Whitespace
+</code></pre></div>
+<p>All of these normalize to a single canonical <code>null</code>. Now every downstream stage understands missing values consistently.</p>
+<h2 id="8-stage-3-unicode-normalization">8. Stage 3 — Unicode Normalization<a class="headerlink" href="#8-stage-3-unicode-normalization" title="Permanent link">&para;</a></h2>
+<p>Different Unicode sequences may render identically. For example, <code>José</code> can exist in multiple Unicode forms (composed vs. decomposed characters).</p>
+<p>Normalize to a canonical representation to avoid hidden duplicates and comparison issues.</p>
+<h2 id="9-stage-4-email-normalization">9. Stage 4 — Email Normalization<a class="headerlink" href="#9-stage-4-email-normalization" title="Permanent link">&para;</a></h2>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><code>John@GMAIL.COM
+ john@gmail.com
+JOHN@gmail.com
+</code></pre></div>
+<p>Normalize to:</p>
+<div class="highlight"><pre><span></span><code>john@gmail.com
+</code></pre></div>
+<p>Also detect invalid formats. For example, <code>john@@gmail</code> is marked as <code>Invalid Email</code> — but the record is not discarded yet.</p>
+<h2 id="10-multiple-emails">10. Multiple Emails<a class="headerlink" href="#10-multiple-emails" title="Permanent link">&para;</a></h2>
+<p>Input:</p>
+<div class="highlight"><pre><span></span><code>john@gmail.com
+john@yahoo.com
+john@company.com
+</code></pre></div>
+<p>The assignment rule dictates:</p>
+<ul>
+<li>Primary → <code>john@gmail.com</code></li>
+<li>Remaining → <code>crm_note</code></li>
+</ul>
+<p>Normalization prepares the values; later stages apply the business rule (see <a href="../13-validation-trust-engine/">Chapter 13 — Validation, Business Rules &amp; Trust Engine</a>).</p>
+<h2 id="11-phone-number-normalization">11. Phone Number Normalization<a class="headerlink" href="#11-phone-number-normalization" title="Permanent link">&para;</a></h2>
+<p>This deserves its own subsystem. Examples:</p>
+<div class="highlight"><pre><span></span><code>9876543210
++91 9876543210
+91-9876543210
+(+91)9876543210
+98765 43210
+</code></pre></div>
+<p>Normalize to:</p>
+<div class="highlight"><pre><span></span><code>+919876543210
+</code></pre></div>
+<p>Internally store:</p>
+<div class="highlight"><pre><span></span><code>Country Code + National Number
+</code></pre></div>
+<p>This aligns directly with the required CRM schema.</p>
+<h2 id="12-multiple-phone-numbers">12. Multiple Phone Numbers<a class="headerlink" href="#12-multiple-phone-numbers" title="Permanent link">&para;</a></h2>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><code>9876543210
+9999999999
+</code></pre></div>
+<p>Output:</p>
+<ul>
+<li>Primary → <code>9876543210</code></li>
+<li>Secondary → appended later into <code>crm_note</code></li>
+</ul>
+<p>Again: normalization prepares; business rules decide.</p>
+<h2 id="13-date-normalization">13. Date Normalization<a class="headerlink" href="#13-date-normalization" title="Permanent link">&para;</a></h2>
+<p>Real-world dates:</p>
+<div class="highlight"><pre><span></span><code>12/05/2026
+2026-05-12
+May 12 2026
+12-May-26
+2026/05/12
+</code></pre></div>
+<p>Normalize to:</p>
+<div class="highlight"><pre><span></span><code>2026-05-12T00:00:00Z
+</code></pre></div>
+<p>Later stages convert to the desired output format. This greatly reduces ambiguity for the AI.</p>
+<h2 id="14-name-cleanup">14. Name Cleanup<a class="headerlink" href="#14-name-cleanup" title="Permanent link">&para;</a></h2>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><code>JOHN DOE
+john doe
+ John Doe
+</code></pre></div>
+<p>Normalize to:</p>
+<div class="highlight"><pre><span></span><code>John Doe
+</code></pre></div>
+<p>Also remove accidental prefixes/suffixes when appropriate, while preserving legitimate names.</p>
+<h2 id="15-location-cleanup">15. Location Cleanup<a class="headerlink" href="#15-location-cleanup" title="Permanent link">&para;</a></h2>
+<p>Examples:</p>
+<div class="highlight"><pre><span></span><code>Mumbai / mumbai / MUMBAI / &quot; Mumbai&quot;  →  Mumbai
+</code></pre></div>
+<p>State:</p>
+<div class="highlight"><pre><span></span><code>maharashtra  →  Maharashtra
+</code></pre></div>
+<p>Country:</p>
+<div class="highlight"><pre><span></span><code>india / INDIA  →  India
+</code></pre></div>
+<h2 id="16-company-cleanup">16. Company Cleanup<a class="headerlink" href="#16-company-cleanup" title="Permanent link">&para;</a></h2>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><code>Google Pvt Ltd
+GOOGLE PRIVATE LIMITED
+Google Pvt. Ltd.
+</code></pre></div>
+<p>Normalize spacing, casing, and punctuation consistently while preserving the original company identity.</p>
+<h2 id="17-boolean-normalization">17. Boolean Normalization<a class="headerlink" href="#17-boolean-normalization" title="Permanent link">&para;</a></h2>
+<p>CSV values:</p>
+<div class="highlight"><pre><span></span><code>Yes, TRUE, 1, Y, T  →  true
+No, FALSE, 0, N     →  false
+</code></pre></div>
+<p>Useful for future extensibility.</p>
+<h2 id="18-numeric-cleanup">18. Numeric Cleanup<a class="headerlink" href="#18-numeric-cleanup" title="Permanent link">&para;</a></h2>
+<p>Remove formatting artifacts:</p>
+<div class="highlight"><pre><span></span><code>1,20,000  →  120000
+₹45,000   →  45000
+</code></pre></div>
+<p>Even if not needed today, this makes the engine reusable.</p>
+<h2 id="19-text-cleanup">19. Text Cleanup<a class="headerlink" href="#19-text-cleanup" title="Permanent link">&para;</a></h2>
+<p>Remove invisible characters:</p>
+<ul>
+<li>Zero-width spaces</li>
+<li>Non-breaking spaces</li>
+<li>Control characters</li>
+<li>Extra tabs</li>
+</ul>
+<p>Without altering user intent.</p>
+<h2 id="20-duplicate-value-detection">20. Duplicate Value Detection<a class="headerlink" href="#20-duplicate-value-detection" title="Permanent link">&para;</a></h2>
+<p>Within a record:</p>
+<div class="highlight"><pre><span></span><code>Phone:  9876543210
+Mobile: 9876543210
+</code></pre></div>
+<p>Recognize identical values so downstream logic does not treat them as separate contacts.</p>
+<h2 id="21-noise-removal">21. Noise Removal<a class="headerlink" href="#21-noise-removal" title="Permanent link">&para;</a></h2>
+<p>Real exports contain label noise embedded in values:</p>
+<div class="highlight"><pre><span></span><code>Phone: 9876543210     →  9876543210
+Email:- john@gmail.com  →  john@gmail.com
+</code></pre></div>
+<h2 id="22-column-value-profiling">22. Column Value Profiling<a class="headerlink" href="#22-column-value-profiling" title="Permanent link">&para;</a></h2>
+<p>Enhance metadata with per-column statistics. Example for a <code>Phone</code> column:</p>
+<div class="highlight"><pre><span></span><code>Unique:    1420
+Missing:   3%
+Duplicate: 1%
+</code></pre></div>
+<p>This information becomes useful for analytics and debugging.</p>
+<h2 id="23-normalization-metadata">23. Normalization Metadata<a class="headerlink" href="#23-normalization-metadata" title="Permanent link">&para;</a></h2>
+<p>Don't only output cleaned data — output diagnostics:</p>
+<div class="highlight"><pre><span></span><code>Phones Cleaned:      1380
+Emails Cleaned:      1421
+Dates Parsed:        1320
+Unicode Fixed:       8
+Whitespace Removed:  4300 fields
+</code></pre></div>
+<p>This becomes valuable in logs and monitoring (see <a href="../15-observability/">Chapter 15 — Observability, Telemetry &amp; Operational Intelligence</a>).</p>
+<h2 id="24-normalization-rules-engine">24. Normalization Rules Engine<a class="headerlink" href="#24-normalization-rules-engine" title="Permanent link">&para;</a></h2>
+<p>Instead of hardcoding everything, create independent rule groups:</p>
+<div class="highlight"><pre><span></span><code>Whitespace Rules → Text Rules → Email Rules → Phone Rules → Date Rules → Location Rules
+</code></pre></div>
+<p>Tomorrow, need PAN normalization? Add one rule. Pipeline unchanged.</p>
+<h2 id="25-error-handling">25. Error Handling<a class="headerlink" href="#25-error-handling" title="Permanent link">&para;</a></h2>
+<p>Normalization should never stop the pipeline. Instead:</p>
+<div class="highlight"><pre><span></span><code>Cannot Parse Date  →  Leave Original  →  Add Warning
+</code></pre></div>
+<p>or:</p>
+<div class="highlight"><pre><span></span><code>Invalid Email  →  Mark Invalid  →  Continue
+</code></pre></div>
+<p>Recovery over failure.</p>
+<h2 id="26-output-contract">26. Output Contract<a class="headerlink" href="#26-output-contract" title="Permanent link">&para;</a></h2>
+<p>Every record leaving this engine should contain:</p>
+<ul>
+<li>Original values (for traceability, if desired internally)</li>
+<li>Normalized values</li>
+<li>Field-level normalization diagnostics (optional but valuable)</li>
+<li>Record warnings</li>
+</ul>
+<p>Conceptually:</p>
+<div class="highlight"><pre><span></span><code>Original Record + Normalized Record + Normalization Report
+</code></pre></div>
+<h2 id="27-component-architecture">27. Component Architecture<a class="headerlink" href="#27-component-architecture" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>flowchart TD
+    E[Data Normalization Engine] --&gt; W[Whitespace Cleaner]
+    E --&gt; U[Unicode Cleaner]
+    E --&gt; N[Null Detector]
+    W --&gt; EM[Email Normalizer]
+    U --&gt; EM
+    N --&gt; EM
+    EM --&gt; P[Phone Normalizer]
+    P --&gt; D[Date Normalizer]
+    D --&gt; L[Location Normalizer]
+    L --&gt; DD[Duplicate Detector]
+    DD --&gt; R[Normalization Report]
+    R --&gt; C[Canonical Records]</code></pre>
+<p>Every component performs exactly one transformation.</p>
+<h2 id="28-why-this-matters-for-ai">28. Why This Matters for AI<a class="headerlink" href="#28-why-this-matters-for-ai" title="Permanent link">&para;</a></h2>
+<p>Instead of sending the LLM:</p>
+<div class="highlight"><pre><span></span><code>Email : JOHN@GMAIL.COM
+Phone : (+91)-98765 43210
+Date  : 12-May-26
+</code></pre></div>
+<p>we send:</p>
+<div class="highlight"><pre><span></span><code>Email : john@gmail.com
+Phone : +919876543210
+Date  : 2026-05-12T00:00:00Z
+</code></pre></div>
+<p>The AI now focuses on semantic extraction rather than formatting inconsistencies, resulting in:</p>
+<ul>
+<li>Higher extraction accuracy</li>
+<li>Lower token usage</li>
+<li>More consistent outputs</li>
+<li>Fewer retries</li>
+</ul>
+<h2 id="29-engineering-decisions">29. Engineering Decisions<a class="headerlink" href="#29-engineering-decisions" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Normalize before AI</td>
+<td>Reduce ambiguity and LLM workload</td>
+</tr>
+<tr>
+<td>Preserve meaning</td>
+<td>Never change user intent</td>
+</tr>
+<tr>
+<td>Rule-based transformations</td>
+<td>Deterministic, testable, inexpensive</td>
+</tr>
+<tr>
+<td>Diagnostics generation</td>
+<td>Better observability and debugging</td>
+</tr>
+<tr>
+<td>Independent rule modules</td>
+<td>Easy to extend and maintain</td>
+</tr>
+<tr>
+<td>Graceful recovery</td>
+<td>Invalid fields don't stop the pipeline</td>
+</tr>
+</tbody>
+</table>
+<h2 id="30-production-enhancement-transformation-history">30. Production Enhancement: Transformation History<a class="headerlink" href="#30-production-enhancement-transformation-history" title="Permanent link">&para;</a></h2>
+<p>This is one place where the design goes beyond a typical implementation.</p>
+<p>Instead of mutating values directly, maintain a <strong>transformation history</strong> internally for each record:</p>
+<div class="highlight"><pre><span></span><code>Original
+    ↓
+Trimmed Whitespace
+    ↓
+Normalized Email
+    ↓
+Standardized Phone
+    ↓
+Canonical Record
+</code></pre></div>
+<p>This audit trail makes debugging significantly easier. If someone asks, "Why did this phone number change?" or "Why was this email considered invalid?", you can inspect the exact sequence of transformations instead of guessing.</p>
+<h2 id="implementation-tasks">Implementation Tasks<a class="headerlink" href="#implementation-tasks" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[ ] <strong>Task 9.1 — Deterministic normalization pipeline.</strong> Build the ordered, single-responsibility normalization pipeline that transforms parsed records into canonical records.</li>
+<li>[ ] <strong>Task 9.2 — Whitespace and Unicode normalization.</strong> Trim values, collapse repeated spaces, and normalize Unicode to a canonical form.</li>
+<li>[ ] <strong>Task 9.3 — Null value normalization.</strong> Detect all empty-value representations (NULL, N/A, -, Unknown, whitespace, etc.) and map them to a canonical <code>null</code>.</li>
+<li>[ ] <strong>Task 9.4 — Email normalization.</strong> Lowercase and trim emails, detect invalid formats, and mark them without discarding records.</li>
+<li>[ ] <strong>Task 9.5 — Phone normalization.</strong> Standardize phone numbers to <code>+&lt;country code&gt;&lt;national number&gt;</code> form, storing country code and national number separately.</li>
+<li>[ ] <strong>Task 9.6 — Date normalization.</strong> Parse heterogeneous date formats into a canonical ISO-8601 UTC representation.</li>
+<li>[ ] <strong>Task 9.7 — Name, company, and location normalization.</strong> Apply consistent casing, spacing, and punctuation cleanup while preserving identity.</li>
+<li>[ ] <strong>Task 9.8 — Boolean and numeric normalization.</strong> Map boolean variants to <code>true</code>/<code>false</code> and strip numeric formatting artifacts (separators, currency symbols).</li>
+<li>[ ] <strong>Task 9.9 — Duplicate detection.</strong> Recognize identical values across fields within a record (e.g., Phone vs. Mobile).</li>
+<li>[ ] <strong>Task 9.10 — Noise removal.</strong> Strip label prefixes (<code>Phone:</code>, <code>Email:-</code>) and invisible characters from values.</li>
+<li>[ ] <strong>Task 9.11 — Normalization diagnostics.</strong> Emit per-run diagnostics (counts of cleaned phones, emails, dates, Unicode fixes, whitespace removals) and per-column value profiles.</li>
+<li>[ ] <strong>Task 9.12 — Rule-based architecture.</strong> Implement normalization as independent, pluggable rule groups so new rules (e.g., PAN) can be added without pipeline changes.</li>
+<li>[ ] <strong>Task 9.13 — Stable output contract.</strong> Produce records containing original values, normalized values, diagnostics, and warnings for downstream AI stages.</li>
+<li>[ ] <strong>Task 9.14 — Transformation history.</strong> Maintain an internal per-record audit trail of every transformation applied, for debugging and traceability.</li>
+</ul>
+<hr />
+<h2 id="related-chapters">Related Chapters<a class="headerlink" href="#related-chapters" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../08-csv-processing-engine/">Chapter 8 — CSV Processing Engine</a> — produces the parsed records this engine normalizes</li>
+<li><a href="../10-ai-extraction-engine/">Chapter 10 — AI Extraction Engine</a> — consumes the canonical records this engine emits</li>
+<li><a href="../13-validation-trust-engine/">Chapter 13 — Validation, Business Rules &amp; Trust Engine</a> — applies the business rules (primary email/phone, <code>crm_note</code>) that normalization prepares for</li>
+<li><a href="../15-observability/">Chapter 15 — Observability, Telemetry &amp; Operational Intelligence</a> — surfaces the normalization diagnostics in logs and monitoring</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "toc.follow", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

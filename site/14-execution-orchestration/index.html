@@ -1,0 +1,2532 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Architecture documentation for an AI-powered data-ingestion platform that extracts CRM lead data from arbitrary CSV formats using LLMs.">
+      
+      
+      
+      
+        <link rel="prev" href="../13-validation-trust-engine/">
+      
+      
+        <link rel="next" href="../15-observability/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>14. Execution Engine, Orchestration & Concurrency - AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#chapter-14-execution-engine-orchestration-concurrency" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="AI Data Ingestion Engine (AIDE) — Architecture &amp; Engineering Handbook" class="md-header__button md-logo" aria-label="AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              14. Execution Engine, Orchestration & Concurrency
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="AI Data Ingestion Engine (AIDE) — Architecture &amp; Engineering Handbook" class="md-nav__button md-logo" aria-label="AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part I — Foundations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part I — Foundations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-assignment-specification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1. Assignment Specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-solution-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2. Solution Analysis & Design Approach
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-engineering-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3. Engineering Roadmap & Methodology
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-pipeline-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4. The Pipeline Architecture Mindset
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part II — System & Application Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part II — System & Application Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-system-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    5. Product Thinking & System Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-frontend-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6. Frontend Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-backend-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    7. Backend Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part III — The Data Pipeline
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part III — The Data Pipeline
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-csv-processing-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    8. CSV Processing Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-data-normalization-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    9. Data Normalization Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part IV — The AI Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part IV — The AI Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-ai-extraction-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10. AI Extraction Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-prompt-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    11. Prompt Engineering & Semantic Intelligence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-semantic-intelligence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    12. Semantic Intelligence & Prompt Orchestration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../13-validation-trust-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    13. Validation, Business Rules & Trust Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part V — Running at Scale
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part V — Running at Scale
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    14. Execution Engine, Orchestration & Concurrency
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    14. Execution Engine, Orchestration & Concurrency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-why-we-need-an-execution-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Why We Need an Execution Engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-pipeline-vs-execution-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Pipeline vs Execution Engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-system-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. System Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-responsibilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Responsibilities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-execution-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Execution Lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-import-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Import Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-batch-scheduler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Batch Scheduler
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-dynamic-batch-size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Dynamic Batch Size
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-worker-pool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Worker Pool
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-parallel-processing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Parallel Processing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-configurable-concurrency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Configurable Concurrency
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-stage-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Stage Execution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-failure-isolation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Failure Isolation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-retry-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Retry Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-retry-queue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. Retry Queue
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-timeout-manager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. Timeout Manager
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-cancellation-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. Cancellation Support
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18-progress-tracker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. Progress Tracker
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19-progress-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. Progress Events
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#20-aggregation-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20. Aggregation Engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#21-partial-success" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21. Partial Success
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-execution-state-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22. Execution State Machine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-event-bus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23. Event Bus
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#24-execution-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24. Execution Metrics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#25-memory-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25. Memory Management
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#26-backpressure-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26. Backpressure Control
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#27-observability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        27. Observability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#28-future-queue-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28. Future Queue Integration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#29-execution-engine-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        29. Execution Engine Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#30-engineering-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        30. Engineering Decisions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#31-production-enhancement-beyond-the-assignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        31. Production Enhancement Beyond the Assignment
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="31. Production Enhancement Beyond the Assignment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adaptive-execution-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adaptive Execution Engine
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#32-architecture-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        32. Architecture Status
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Tasks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-chapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Chapters
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../15-observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    15. Observability, Telemetry & Operational Intelligence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-reliability-resilience/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    16. Reliability, Resilience & Fault Tolerance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-security-ai-safety/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    17. Security, Privacy & AI Safety
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part VI — Delivery & Evolution
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part VI — Delivery & Evolution
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../18-quality-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    18. Quality Engineering, Testing & Continuous Verification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../19-platform-engineering-devops/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    19. Platform Engineering, DevOps & Production Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../20-future-evolution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    20. Future Evolution & Platform Vision
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-why-we-need-an-execution-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Why We Need an Execution Engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-pipeline-vs-execution-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Pipeline vs Execution Engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-system-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. System Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-responsibilities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Responsibilities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-execution-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Execution Lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-import-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Import Context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-batch-scheduler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Batch Scheduler
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-dynamic-batch-size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Dynamic Batch Size
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-worker-pool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Worker Pool
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-parallel-processing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Parallel Processing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-configurable-concurrency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Configurable Concurrency
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-stage-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Stage Execution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-failure-isolation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Failure Isolation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-retry-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Retry Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-retry-queue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. Retry Queue
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-timeout-manager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. Timeout Manager
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-cancellation-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. Cancellation Support
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18-progress-tracker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. Progress Tracker
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19-progress-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. Progress Events
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#20-aggregation-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        20. Aggregation Engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#21-partial-success" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        21. Partial Success
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#22-execution-state-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        22. Execution State Machine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#23-event-bus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        23. Event Bus
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#24-execution-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        24. Execution Metrics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#25-memory-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        25. Memory Management
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#26-backpressure-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        26. Backpressure Control
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#27-observability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        27. Observability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#28-future-queue-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        28. Future Queue Integration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#29-execution-engine-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        29. Execution Engine Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#30-engineering-decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        30. Engineering Decisions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#31-production-enhancement-beyond-the-assignment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        31. Production Enhancement Beyond the Assignment
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="31. Production Enhancement Beyond the Assignment">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adaptive-execution-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adaptive Execution Engine
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#32-architecture-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        32. Architecture Status
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Tasks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-chapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Chapters
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="chapter-14-execution-engine-orchestration-concurrency">Chapter 14 — Execution Engine, Orchestration &amp; Concurrency<a class="headerlink" href="#chapter-14-execution-engine-orchestration-concurrency" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p><strong>Goal:</strong> Build a resilient execution engine capable of orchestrating the entire import pipeline with concurrency, fault isolation, retries, progress tracking, and future horizontal scalability.</p>
+<p><strong>Core Principle:</strong> <strong>The pipeline defines WHAT happens. The Execution Engine decides HOW it happens.</strong></p>
+</blockquote>
+<p>The previous chapters built the intelligence of the system — extraction, semantics, and trust. This chapter addresses execution architecture: an AI system isn't just about making correct decisions, it's about executing thousands of operations reliably, efficiently, and observably.</p>
+<h2 id="1-why-we-need-an-execution-engine">1. Why We Need an Execution Engine<a class="headerlink" href="#1-why-we-need-an-execution-engine" title="Permanent link">&para;</a></h2>
+<p>It's tempting to assume the pipeline executes itself:</p>
+<div class="highlight"><pre><span></span><code>CSV → Parse → Normalize → AI → Validate → Done
+</code></pre></div>
+<p>Reality is different. Someone has to decide:</p>
+<ul>
+<li>when to start</li>
+<li>how many batches to run</li>
+<li>what to retry</li>
+<li>how to recover</li>
+<li>how to report progress</li>
+<li>when to stop</li>
+</ul>
+<p>That "someone" is the Execution Engine.</p>
+<h2 id="2-pipeline-vs-execution-engine">2. Pipeline vs Execution Engine<a class="headerlink" href="#2-pipeline-vs-execution-engine" title="Permanent link">&para;</a></h2>
+<p>These are different concepts:</p>
+<ul>
+<li>The <strong>pipeline</strong> defines <strong>WHAT</strong> happens.</li>
+<li>The <strong>Execution Engine</strong> defines <strong>HOW</strong> it happens.</li>
+</ul>
+<p>Example — the pipeline says:</p>
+<div class="highlight"><pre><span></span><code>Normalize → AI → Validate
+</code></pre></div>
+<p>The Execution Engine says:</p>
+<div class="highlight"><pre><span></span><code>Run 6 batches → Retry Batch 3 → Pause → Continue → Merge Results
+</code></pre></div>
+<h2 id="3-system-architecture">3. System Architecture<a class="headerlink" href="#3-system-architecture" title="Permanent link">&para;</a></h2>
+<p>The Execution Engine owns orchestration:</p>
+<pre class="mermaid"><code>flowchart TD
+    HR[HTTP Request] --&gt; EE[Execution Engine]
+    EE --&gt; PR[Pipeline Runner]
+    EE --&gt; BS[Batch Scheduler]
+    EE --&gt; PT[Progress Tracker]
+    PR --&gt; WP[Worker Pool]
+    BS --&gt; WP
+    PT --&gt; WP
+    WP --&gt; PS[Pipeline Stages]
+    PS --&gt; FA[Final Aggregation]</code></pre>
+<h2 id="4-responsibilities">4. Responsibilities<a class="headerlink" href="#4-responsibilities" title="Permanent link">&para;</a></h2>
+<p>The Execution Engine <strong>owns</strong>:</p>
+<ul>
+<li>Pipeline orchestration</li>
+<li>Batch scheduling</li>
+<li>Concurrency</li>
+<li>Retry strategy</li>
+<li>Progress tracking</li>
+<li>Timeouts</li>
+<li>Failure isolation</li>
+<li>Metrics collection</li>
+</ul>
+<p>It <strong>never owns</strong>:</p>
+<ul>
+<li>AI logic</li>
+<li>Validation logic</li>
+<li>Business rules</li>
+</ul>
+<p>Those live in the pipeline stages (see <a href="../10-ai-extraction-engine/">Chapter 10 — AI Extraction Engine</a> and <a href="../13-validation-trust-engine/">Chapter 13 — Validation, Business Rules &amp; Trust Engine</a>).</p>
+<h2 id="5-execution-lifecycle">5. Execution Lifecycle<a class="headerlink" href="#5-execution-lifecycle" title="Permanent link">&para;</a></h2>
+<p>Every import follows the same lifecycle, so every import has a predictable state:</p>
+<div class="highlight"><pre><span></span><code>Created → Queued → Preparing → Executing → Validating → Aggregating → Completed
+</code></pre></div>
+<p>or terminates in:</p>
+<div class="highlight"><pre><span></span><code>→ Failed
+</code></pre></div>
+<h2 id="6-import-context">6. Import Context<a class="headerlink" href="#6-import-context" title="Permanent link">&para;</a></h2>
+<p>Every execution gets its own context — the single object that every subsystem reads and updates. Conceptually it contains:</p>
+<div class="highlight"><pre><span></span><code>Request ID
+Uploaded File
+Metadata
+Current Stage
+Completed Batches
+Statistics
+Errors
+Execution State
+</code></pre></div>
+<h2 id="7-batch-scheduler">7. Batch Scheduler<a class="headerlink" href="#7-batch-scheduler" title="Permanent link">&para;</a></h2>
+<p>Suppose the CSV contains 5000 rows. The scheduler — not the pipeline — decides the batching:</p>
+<div class="highlight"><pre><span></span><code>Batch 1 → Rows 1–100
+Batch 2 → Rows 101–200
+Batch 3 → Rows 201–300
+...
+</code></pre></div>
+<p>Keeping batching out of the pipeline keeps the pipeline pure and the scheduling policy replaceable.</p>
+<h2 id="8-dynamic-batch-size">8. Dynamic Batch Size<a class="headerlink" href="#8-dynamic-batch-size" title="Permanent link">&para;</a></h2>
+<p>Never hardcode a batch size like <code>100 rows</code>. Instead, size batches based on:</p>
+<ul>
+<li>token count</li>
+<li>average row width</li>
+<li>provider limits</li>
+<li>memory</li>
+<li>latency</li>
+</ul>
+<p>Large rows → smaller batches. Small rows → larger batches. This is much more efficient than a fixed size.</p>
+<h2 id="9-worker-pool">9. Worker Pool<a class="headerlink" href="#9-worker-pool" title="Permanent link">&para;</a></h2>
+<p>Never create unlimited parallel tasks. Instead, the Execution Engine feeds a bounded worker pool:</p>
+<div class="highlight"><pre><span></span><code>Execution Engine → Worker Pool → Worker 1 | Worker 2 | Worker 3 | Worker 4
+</code></pre></div>
+<p>Workers process batches independently.</p>
+<h2 id="10-parallel-processing">10. Parallel Processing<a class="headerlink" href="#10-parallel-processing" title="Permanent link">&para;</a></h2>
+<p>Instead of processing batches sequentially (<code>Batch 1 → Batch 2 → Batch 3</code>), run them in parallel:</p>
+<div class="highlight"><pre><span></span><code>Batch 1  Batch 2  Batch 3  Batch 4  → Parallel
+</code></pre></div>
+<p>This yields a massive performance gain on large imports.</p>
+<h2 id="11-configurable-concurrency">11. Configurable Concurrency<a class="headerlink" href="#11-configurable-concurrency" title="Permanent link">&para;</a></h2>
+<p>Different AI providers have different limits, so concurrency is configuration, not code:</p>
+<table>
+<thead>
+<tr>
+<th>Environment</th>
+<th>Workers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Development</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Production</td>
+<td>8</td>
+</tr>
+<tr>
+<td>Enterprise</td>
+<td>20</td>
+</tr>
+</tbody>
+</table>
+<p>Changing environments requires no code changes.</p>
+<h2 id="12-stage-execution">12. Stage Execution<a class="headerlink" href="#12-stage-execution" title="Permanent link">&para;</a></h2>
+<p>Each worker executes the full pipeline for its batch:</p>
+<div class="highlight"><pre><span></span><code>Normalize → Prompt → AI → Validate → Repair
+</code></pre></div>
+<p>Every batch runs independently of the others.</p>
+<h2 id="13-failure-isolation">13. Failure Isolation<a class="headerlink" href="#13-failure-isolation" title="Permanent link">&para;</a></h2>
+<p>Imagine batch 17 fails.</p>
+<p>Bad architecture: the entire import fails.</p>
+<p>Good architecture:</p>
+<div class="highlight"><pre><span></span><code>Batch 17      → Retry
+Other Batches → Continue
+</code></pre></div>
+<p>Never stop everything because of one failure.</p>
+<h2 id="14-retry-strategy">14. Retry Strategy<a class="headerlink" href="#14-retry-strategy" title="Permanent link">&para;</a></h2>
+<p>Different failure types deserve different recovery strategies:</p>
+<table>
+<thead>
+<tr>
+<th>Failure</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AI Timeout</td>
+<td>Retry</td>
+</tr>
+<tr>
+<td>Rate Limit</td>
+<td>Backoff + Retry</td>
+</tr>
+<tr>
+<td>Network Error</td>
+<td>Retry</td>
+</tr>
+<tr>
+<td>Invalid JSON</td>
+<td>Repair → Retry</td>
+</tr>
+<tr>
+<td>Validation Failure</td>
+<td>Skip Record</td>
+</tr>
+<tr>
+<td>Internal Bug</td>
+<td>Fail Batch</td>
+</tr>
+</tbody>
+</table>
+<h2 id="15-retry-queue">15. Retry Queue<a class="headerlink" href="#15-retry-queue" title="Permanent link">&para;</a></h2>
+<p>Failed batches flow into a dedicated retry queue — simple and predictable:</p>
+<div class="highlight"><pre><span></span><code>Failed → Retry Queue → Worker → Completed
+</code></pre></div>
+<h2 id="16-timeout-manager">16. Timeout Manager<a class="headerlink" href="#16-timeout-manager" title="Permanent link">&para;</a></h2>
+<p>Every stage has a timeout — the system never waits forever:</p>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Timeout</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CSV Parse</td>
+<td>20 sec</td>
+</tr>
+<tr>
+<td>AI</td>
+<td>45 sec</td>
+</tr>
+<tr>
+<td>Validation</td>
+<td>10 sec</td>
+</tr>
+</tbody>
+</table>
+<h2 id="17-cancellation-support">17. Cancellation Support<a class="headerlink" href="#17-cancellation-support" title="Permanent link">&para;</a></h2>
+<p>If the user closes the browser, should the server stop? Not necessarily. The execution context supports a clean cancellation path:</p>
+<div class="highlight"><pre><span></span><code>Running → Cancellation Requested → Safe Shutdown
+</code></pre></div>
+<p>A future API could cancel execution cleanly:</p>
+<div class="highlight"><pre><span></span><code>DELETE /import/{id}
+</code></pre></div>
+<h2 id="18-progress-tracker">18. Progress Tracker<a class="headerlink" href="#18-progress-tracker" title="Permanent link">&para;</a></h2>
+<p>The frontend should never guess progress. The Execution Engine reports each phase, with percentages:</p>
+<div class="highlight"><pre><span></span><code>Preparing → Parsing → Normalizing → Processing AI → Validation → Finalizing
+</code></pre></div>
+<h2 id="19-progress-events">19. Progress Events<a class="headerlink" href="#19-progress-events" title="Permanent link">&para;</a></h2>
+<p>Every stage emits events:</p>
+<div class="highlight"><pre><span></span><code>Batch Started → AI Started → AI Finished → Validation Finished → Batch Complete
+</code></pre></div>
+<p>These events feed the UI, logs, and metrics.</p>
+<h2 id="20-aggregation-engine">20. Aggregation Engine<a class="headerlink" href="#20-aggregation-engine" title="Permanent link">&para;</a></h2>
+<p>Workers finish independently, so one component must merge the results:</p>
+<div class="highlight"><pre><span></span><code>Batch 1 + Batch 2 + Batch 3 → Aggregation → One Result
+</code></pre></div>
+<p>Aggregation also combines:</p>
+<ul>
+<li>statistics</li>
+<li>skipped records</li>
+<li>diagnostics</li>
+<li>warnings</li>
+</ul>
+<h2 id="21-partial-success">21. Partial Success<a class="headerlink" href="#21-partial-success" title="Permanent link">&para;</a></h2>
+<p>One of the most important concepts in the execution layer. Imagine 20 batches: 18 succeed, 2 fail.</p>
+<p>Never return:</p>
+<div class="highlight"><pre><span></span><code>Import Failed
+</code></pre></div>
+<p>Return:</p>
+<div class="highlight"><pre><span></span><code>Imported: 1800
+Skipped:  43
+Failed:   2 batches
+</code></pre></div>
+<p>Users strongly prefer partial success over all-or-nothing failure.</p>
+<h2 id="22-execution-state-machine">22. Execution State Machine<a class="headerlink" href="#22-execution-state-machine" title="Permanent link">&para;</a></h2>
+<p>Every import moves through a well-defined state machine, which makes debugging much easier:</p>
+<pre class="mermaid"><code>flowchart TD
+    A[Created] --&gt; B[Queued]
+    B --&gt; C[Preparing]
+    C --&gt; D[Running]
+    D --&gt; E[Retrying]
+    E --&gt; F[Aggregating]
+    D --&gt; F
+    F --&gt; G[Completed]
+    D --&gt; H[Cancelled]
+    D --&gt; I[Failed]
+    E --&gt; I</code></pre>
+<h2 id="23-event-bus">23. Event Bus<a class="headerlink" href="#23-event-bus" title="Permanent link">&para;</a></h2>
+<p>Instead of modules calling each other directly, subsystems publish events:</p>
+<div class="highlight"><pre><span></span><code>Batch Completed → Event Bus → Progress Tracker → Logger → Metrics → Dashboard
+</code></pre></div>
+<p>This gives low coupling and easy extension — new consumers subscribe without touching the engine.</p>
+<h2 id="24-execution-metrics">24. Execution Metrics<a class="headerlink" href="#24-execution-metrics" title="Permanent link">&para;</a></h2>
+<p>The engine collects:</p>
+<div class="highlight"><pre><span></span><code>Rows/sec
+Batches/sec
+Average AI Time
+Retry Count
+Worker Utilization
+Success Rate
+</code></pre></div>
+<p>These metrics reveal bottlenecks (see <a href="../15-observability/">Chapter 15 — Observability</a>).</p>
+<h2 id="25-memory-management">25. Memory Management<a class="headerlink" href="#25-memory-management" title="Permanent link">&para;</a></h2>
+<p>Avoid accumulating everything in RAM.</p>
+<p>Bad:</p>
+<div class="highlight"><pre><span></span><code>All Batches → Memory → Merge
+</code></pre></div>
+<p>Better:</p>
+<div class="highlight"><pre><span></span><code>Batch → Process → Aggregate → Release Memory
+</code></pre></div>
+<p>Releasing batch memory as soon as it is aggregated allows much larger imports.</p>
+<h2 id="26-backpressure-control">26. Backpressure Control<a class="headerlink" href="#26-backpressure-control" title="Permanent link">&para;</a></h2>
+<p>Suppose the AI provider slows down. Without backpressure:</p>
+<div class="highlight"><pre><span></span><code>Workers → Keep Creating Requests → Queue Explosion
+</code></pre></div>
+<p>Instead, the Execution Engine monitors throughput. If downstream slows, the scheduler temporarily reduces concurrency. This keeps the system stable under load.</p>
+<h2 id="27-observability">27. Observability<a class="headerlink" href="#27-observability" title="Permanent link">&para;</a></h2>
+<p>Every execution produces structured telemetry:</p>
+<div class="highlight"><pre><span></span><code>Import ID
+Execution Timeline
+Worker Timeline
+Retries
+Latency
+Cost
+Validation Score
+</code></pre></div>
+<p>This enables debugging without reproducing the issue.</p>
+<h2 id="28-future-queue-integration">28. Future Queue Integration<a class="headerlink" href="#28-future-queue-integration" title="Permanent link">&para;</a></h2>
+<p>Today the import can execute synchronously. Tomorrow it can move behind a job queue:</p>
+<div class="highlight"><pre><span></span><code>Upload → Job Queue → Worker Service → Pipeline → Database → Notification
+</code></pre></div>
+<p>Crucially, the Execution Engine itself doesn't change — only the execution mode changes.</p>
+<h2 id="29-execution-engine-architecture">29. Execution Engine Architecture<a class="headerlink" href="#29-execution-engine-architecture" title="Permanent link">&para;</a></h2>
+<p>Each subsystem owns exactly one responsibility:</p>
+<pre class="mermaid"><code>flowchart TD
+    EE[Execution Engine] --&gt; EC[Execution Context]
+    EC --&gt; BS[Batch Scheduler]
+    BS --&gt; WP[Worker Pool]
+    WP --&gt; PR[Pipeline Runner]
+    PR --&gt; RM[Retry Manager]
+    RM --&gt; PT[Progress Tracker]
+    PT --&gt; EP[Event Publisher]
+    EP --&gt; AG[Aggregation Engine]
+    AG --&gt; IR[Import Result]</code></pre>
+<h2 id="30-engineering-decisions">30. Engineering Decisions<a class="headerlink" href="#30-engineering-decisions" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Separate execution from pipeline</td>
+<td>Clear separation of orchestration and business logic</td>
+</tr>
+<tr>
+<td>Worker pool</td>
+<td>Controlled parallelism</td>
+</tr>
+<tr>
+<td>Dynamic batching</td>
+<td>Better throughput and token efficiency</td>
+</tr>
+<tr>
+<td>Failure isolation</td>
+<td>One batch doesn't break the entire import</td>
+</tr>
+<tr>
+<td>Partial success</td>
+<td>Better user experience</td>
+</tr>
+<tr>
+<td>Event-driven progress</td>
+<td>Decoupled architecture</td>
+</tr>
+<tr>
+<td>Aggregation engine</td>
+<td>Deterministic final result</td>
+</tr>
+<tr>
+<td>Backpressure control</td>
+<td>Stable under varying provider latency</td>
+</tr>
+<tr>
+<td>Configurable concurrency</td>
+<td>Easy deployment across environments</td>
+</tr>
+</tbody>
+</table>
+<h2 id="31-production-enhancement-beyond-the-assignment">31. Production Enhancement Beyond the Assignment<a class="headerlink" href="#31-production-enhancement-beyond-the-assignment" title="Permanent link">&para;</a></h2>
+<h3 id="adaptive-execution-engine">Adaptive Execution Engine<a class="headerlink" href="#adaptive-execution-engine" title="Permanent link">&para;</a></h3>
+<p>Instead of fixed concurrency, let the engine adjust itself automatically from live metrics:</p>
+<div class="highlight"><pre><span></span><code>Current Metrics
+  Provider Latency
+  Rate Limit Errors
+  CPU Usage
+  Memory Usage
+        ↓
+Adaptive Scheduler
+        ↓
+Concurrency = 3  or  Concurrency = 8
+</code></pre></div>
+<p>Examples of adaptive behavior:</p>
+<ul>
+<li>AI responses are fast → increase concurrency.</li>
+<li>Rate-limit responses increase → reduce concurrency.</li>
+<li>Memory pressure grows → shrink batch size.</li>
+<li>Token usage spikes → reduce parallel AI requests.</li>
+</ul>
+<p>This creates a <strong>self-tuning execution engine</strong> that maximizes throughput while respecting system constraints — a pattern commonly used in production data-processing systems.</p>
+<h2 id="32-architecture-status">32. Architecture Status<a class="headerlink" href="#32-architecture-status" title="Permanent link">&para;</a></h2>
+<p>The platform has now evolved into a <strong>production-grade AI data ingestion system</strong> with four major architectural pillars:</p>
+<ol>
+<li><strong>Data Intelligence</strong> (CSV parsing, normalization)</li>
+<li><strong>Semantic Intelligence</strong> (AI extraction, prompt orchestration)</li>
+<li><strong>Trust Layer</strong> (validation, business rules, repair)</li>
+<li><strong>Execution Layer</strong> (scheduling, concurrency, recovery, progress)</li>
+</ol>
+<p>The remaining chapters focus on <strong>operational excellence</strong> — logging, monitoring, testing, deployment, security, and long-term maintainability — transforming the project from a robust application into a production-ready platform.</p>
+<h2 id="implementation-tasks">Implementation Tasks<a class="headerlink" href="#implementation-tasks" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[ ] <strong>Task 14.1 — Execution Engine.</strong> Build the orchestration layer that owns scheduling, concurrency, retries, timeouts, progress, and metrics — but no business logic.</li>
+<li>[ ] <strong>Task 14.2 — Import Execution Context.</strong> Create a per-import context holding request ID, file, metadata, current stage, completed batches, statistics, errors, and execution state.</li>
+<li>[ ] <strong>Task 14.3 — Batch Scheduler.</strong> Split input rows into batches outside the pipeline, keeping batching policy replaceable.</li>
+<li>[ ] <strong>Task 14.4 — Dynamic Batch Sizing.</strong> Size batches from token count, row width, provider limits, memory, and latency instead of a hardcoded constant.</li>
+<li>[ ] <strong>Task 14.5 — Worker Pool.</strong> Implement a bounded pool of workers that process batches independently.</li>
+<li>[ ] <strong>Task 14.6 — Configurable Concurrency.</strong> Expose worker count as environment configuration (e.g., 2 dev / 8 prod / 20 enterprise).</li>
+<li>[ ] <strong>Task 14.7 — Retry Manager.</strong> Map each failure type (timeout, rate limit, network, invalid JSON, validation, internal bug) to its recovery strategy and route failed batches through a retry queue.</li>
+<li>[ ] <strong>Task 14.8 — Timeout Manager.</strong> Enforce per-stage timeouts (e.g., parse 20 s, AI 45 s, validation 10 s).</li>
+<li>[ ] <strong>Task 14.9 — Cancellation Support.</strong> Support a Running → Cancellation Requested → Safe Shutdown path, enabling a future <code>DELETE /import/{id}</code> API.</li>
+<li>[ ] <strong>Task 14.10 — Progress Tracker.</strong> Report named phases with percentages so the frontend never guesses progress.</li>
+<li>[ ] <strong>Task 14.11 — Event Bus.</strong> Publish batch and stage lifecycle events consumed by the progress tracker, logger, metrics, and dashboard.</li>
+<li>[ ] <strong>Task 14.12 — Aggregation Engine.</strong> Merge per-batch results, statistics, skipped records, diagnostics, and warnings into one deterministic result.</li>
+<li>[ ] <strong>Task 14.13 — Partial Success Strategy.</strong> Report imported/skipped/failed counts rather than failing an entire import when some batches fail.</li>
+<li>[ ] <strong>Task 14.14 — Execution State Machine.</strong> Model every import as Created → Queued → Preparing → Running → Retrying → Aggregating → Completed / Cancelled / Failed.</li>
+<li>[ ] <strong>Task 14.15 — Backpressure Control.</strong> Monitor downstream throughput and reduce concurrency when the AI provider slows.</li>
+<li>[ ] <strong>Task 14.16 — Execution Metrics.</strong> Collect rows/sec, batches/sec, average AI time, retry count, worker utilization, and success rate.</li>
+<li>[ ] <strong>Task 14.17 — Adaptive Execution Strategy.</strong> Tune concurrency and batch size automatically from live latency, rate-limit, CPU, memory, and token-usage signals.</li>
+</ul>
+<hr />
+<h2 id="related-chapters">Related Chapters<a class="headerlink" href="#related-chapters" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../13-validation-trust-engine/">Chapter 13 — Validation, Business Rules &amp; Trust Engine</a> — the validation stage each worker executes per batch</li>
+<li><a href="../08-csv-processing-engine/">Chapter 8 — CSV Processing Engine</a> — the parsing stage orchestrated at the start of every import</li>
+<li><a href="../10-ai-extraction-engine/">Chapter 10 — AI Extraction Engine</a> — the AI stage whose latency and rate limits drive scheduling decisions</li>
+<li><a href="../15-observability/">Chapter 15 — Observability, Telemetry &amp; Operational Intelligence</a> — consumes execution events, metrics, and telemetry</li>
+<li><a href="../16-reliability-resilience/">Chapter 16 — Reliability, Resilience &amp; Fault Tolerance</a> — extends retry, isolation, and backpressure into full fault tolerance</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "toc.follow", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

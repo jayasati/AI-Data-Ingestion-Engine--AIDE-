@@ -1,0 +1,2249 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Architecture documentation for an AI-powered data-ingestion platform that extracts CRM lead data from arbitrary CSV formats using LLMs.">
+      
+      
+      
+      
+        <link rel="prev" href="../01-assignment-specification/">
+      
+      
+        <link rel="next" href="../03-engineering-roadmap/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>2. Solution Analysis & Design Approach - AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#chapter-2-solution-analysis-design-approach" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="AI Data Ingestion Engine (AIDE) — Architecture &amp; Engineering Handbook" class="md-header__button md-logo" aria-label="AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              2. Solution Analysis & Design Approach
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="AI Data Ingestion Engine (AIDE) — Architecture &amp; Engineering Handbook" class="md-nav__button md-logo" aria-label="AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AI Data Ingestion Engine (AIDE) — Architecture & Engineering Handbook
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part I — Foundations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part I — Foundations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-assignment-specification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    1. Assignment Specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2. Solution Analysis & Design Approach
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    2. Solution Analysis & Design Approach
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-reading-the-assignment-correctly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Reading the Assignment Correctly
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-the-real-problem-schema-free-semantic-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. The Real Problem: Schema-Free Semantic Mapping
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-naive-pipeline-vs-engineered-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Naive Pipeline vs Engineered Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-backend-module-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Backend Module Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-deterministic-preprocessing-before-ai" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Deterministic Preprocessing Before AI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-ai-performs-semantic-mapping-not-csv-parsing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. AI Performs Semantic Mapping, Not CSV Parsing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-prompt-design-philosophy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Prompt Design Philosophy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-batch-processing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Batch Processing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-json-validation-never-trust-ai" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. JSON Validation — Never Trust AI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-retry-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Retry Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-confidence-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Confidence Checks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-skip-rule-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Skip-Rule Engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-frontend-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Frontend Flow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13. Frontend Flow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#131-during-preview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.1 During Preview
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#132-during-import" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.2 During Import
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#133-result-screen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.3 Result Screen
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-error-handling-catalogue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Error Handling Catalogue
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. Logging
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-deployment-topology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. Deployment Topology
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-repository-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. Repository Layout
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18-differentiating-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. Differentiating Features
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19-design-recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. Design Recommendation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Tasks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-chapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Chapters
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-engineering-roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    3. Engineering Roadmap & Methodology
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-pipeline-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    4. The Pipeline Architecture Mindset
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part II — System & Application Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part II — System & Application Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-system-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    5. Product Thinking & System Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-frontend-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    6. Frontend Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-backend-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    7. Backend Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part III — The Data Pipeline
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part III — The Data Pipeline
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-csv-processing-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    8. CSV Processing Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-data-normalization-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    9. Data Normalization Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part IV — The AI Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part IV — The AI Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-ai-extraction-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10. AI Extraction Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-prompt-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    11. Prompt Engineering & Semantic Intelligence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-semantic-intelligence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    12. Semantic Intelligence & Prompt Orchestration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../13-validation-trust-engine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    13. Validation, Business Rules & Trust Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part V — Running at Scale
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part V — Running at Scale
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../14-execution-orchestration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    14. Execution Engine, Orchestration & Concurrency
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../15-observability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    15. Observability, Telemetry & Operational Intelligence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-reliability-resilience/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    16. Reliability, Resilience & Fault Tolerance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../17-security-ai-safety/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    17. Security, Privacy & AI Safety
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Part VI — Delivery & Evolution
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Part VI — Delivery & Evolution
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../18-quality-engineering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    18. Quality Engineering, Testing & Continuous Verification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../19-platform-engineering-devops/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    19. Platform Engineering, DevOps & Production Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../20-future-evolution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    20. Future Evolution & Platform Vision
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-reading-the-assignment-correctly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Reading the Assignment Correctly
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-the-real-problem-schema-free-semantic-mapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. The Real Problem: Schema-Free Semantic Mapping
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-naive-pipeline-vs-engineered-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Naive Pipeline vs Engineered Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-backend-module-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Backend Module Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-deterministic-preprocessing-before-ai" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Deterministic Preprocessing Before AI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-ai-performs-semantic-mapping-not-csv-parsing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. AI Performs Semantic Mapping, Not CSV Parsing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-prompt-design-philosophy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Prompt Design Philosophy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-batch-processing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Batch Processing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-json-validation-never-trust-ai" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. JSON Validation — Never Trust AI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-retry-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Retry Strategy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11-confidence-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        11. Confidence Checks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-skip-rule-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        12. Skip-Rule Engine
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-frontend-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13. Frontend Flow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="13. Frontend Flow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#131-during-preview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.1 During Preview
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#132-during-import" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.2 During Import
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#133-result-screen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        13.3 Result Screen
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-error-handling-catalogue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        14. Error Handling Catalogue
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        15. Logging
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-deployment-topology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        16. Deployment Topology
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#17-repository-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        17. Repository Layout
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#18-differentiating-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        18. Differentiating Features
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#19-design-recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        19. Design Recommendation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-tasks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Tasks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-chapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Chapters
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="chapter-2-solution-analysis-design-approach">Chapter 2 — Solution Analysis &amp; Design Approach<a class="headerlink" href="#chapter-2-solution-analysis-design-approach" title="Permanent link">&para;</a></h1>
+<h2 id="1-reading-the-assignment-correctly">1. Reading the Assignment Correctly<a class="headerlink" href="#1-reading-the-assignment-correctly" title="Permanent link">&para;</a></h2>
+<p>The assignment in <a href="../01-assignment-specification/">Chapter 1 — Assignment Specification</a> is not a test of CSV parsing. It tests whether the builder thinks like an engineer building an AI product. Viewed through a senior reviewer's lens, submissions are weighted roughly as follows:</p>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Weight</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AI Pipeline</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td>Backend Architecture</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td>Engineering Decisions</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td>UI/UX</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td>Code Quality</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td>Deployment</td>
+<td>⭐⭐⭐</td>
+</tr>
+</tbody>
+</table>
+<p>The task should therefore not be framed as:</p>
+<blockquote>
+<p>"Build a CSV importer."</p>
+</blockquote>
+<p>but as:</p>
+<blockquote>
+<p>"Build a production AI data ingestion pipeline."</p>
+</blockquote>
+<h2 id="2-the-real-problem-schema-free-semantic-mapping">2. The Real Problem: Schema-Free Semantic Mapping<a class="headerlink" href="#2-the-real-problem-schema-free-semantic-mapping" title="Permanent link">&para;</a></h2>
+<p>GrowEasy receives CSVs from thousands of companies, and every company exports CRM data differently.</p>
+<p>Example 1:</p>
+<div class="highlight"><pre><span></span><code>Customer Name
+Email Address
+Phone
+</code></pre></div>
+<p>Example 2:</p>
+<div class="highlight"><pre><span></span><code>Lead
+Mail ID
+Contact Number
+</code></pre></div>
+<p>Example 3:</p>
+<div class="highlight"><pre><span></span><code>Owner Name
+Primary Contact
+Cell
+</code></pre></div>
+<p>Example 4:</p>
+<div class="highlight"><pre><span></span><code>Lead Details
+Customer Info
+</code></pre></div>
+<p>There is <strong>no fixed schema</strong>. The AI must understand that <code>Mail ID</code> means <code>email</code> and <code>Customer Name</code> means <code>name</code> — without any predefined mapping. That is the real challenge.</p>
+<h2 id="3-naive-pipeline-vs-engineered-pipeline">3. Naive Pipeline vs Engineered Pipeline<a class="headerlink" href="#3-naive-pipeline-vs-engineered-pipeline" title="Permanent link">&para;</a></h2>
+<p>The junior-level solution is:</p>
+<div class="highlight"><pre><span></span><code>Frontend → POST CSV → OpenAI → Done
+</code></pre></div>
+<p>The engineered solution treats the system as a real SaaS product, where the AI call is only one small stage of a larger pipeline:</p>
+<pre class="mermaid"><code>flowchart TD
+    A[Upload CSV] --&gt; B[CSV Validation Layer]
+    B --&gt; C[Streaming CSV Parser]
+    C --&gt; D[Row Normalization Engine]
+    D --&gt; E["Batch Builder (50 rows)"]
+    E --&gt; F[AI Extraction Pipeline]
+    F --&gt; G[JSON Schema Validation]
+    G --&gt; H[Record Post Processing]
+    H --&gt; I["Duplicate Detection (optional)"]
+    I --&gt; J[Statistics Generator]
+    J --&gt; K[API Response]</code></pre>
+<p>Notice how AI is only one small component of the whole.</p>
+<h2 id="4-backend-module-architecture">4. Backend Module Architecture<a class="headerlink" href="#4-backend-module-architecture" title="Permanent link">&para;</a></h2>
+<p>The backend is separated into independent modules, each with exactly one responsibility:</p>
+<div class="highlight"><pre><span></span><code>API
+
+services
+    csv/
+    ai/
+    validation/
+    crm/
+    batching/
+    statistics/
+    logging/
+    prompt/
+    utils/
+</code></pre></div>
+<p>This layering is elaborated in <a href="../07-backend-architecture/">Chapter 7 — Backend Architecture</a>.</p>
+<h2 id="5-deterministic-preprocessing-before-ai">5. Deterministic Preprocessing Before AI<a class="headerlink" href="#5-deterministic-preprocessing-before-ai" title="Permanent link">&para;</a></h2>
+<p>A common mistake is sending raw CSV content straight to the AI. AI tokens are expensive; the data must be cleaned first. The cleaner the data before AI, the better the AI performs.</p>
+<p>Normalization examples:</p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Normalized</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Phone</code> column value <code>9876543210</code></td>
+<td><code>9876543210</code></td>
+</tr>
+<tr>
+<td><code>+91-98765 43210</code></td>
+<td><code>+919876543210</code></td>
+</tr>
+<tr>
+<td><code>john @gmail.com</code></td>
+<td><code>john@gmail.com</code></td>
+</tr>
+<tr>
+<td><code>2026/05/12</code></td>
+<td>ISO date</td>
+</tr>
+</tbody>
+</table>
+<p>The preprocessing chain runs as a fixed sequence, and only then is the AI invoked:</p>
+<div class="highlight"><pre><span></span><code>CSV
+ → Trim spaces
+ → Normalize encoding
+ → Remove empty columns
+ → Remove duplicate headers
+ → Normalize dates
+ → Normalize phones
+ → Normalize emails
+ → Detect blank rows
+ → Create clean records
+</code></pre></div>
+<p>This becomes the <a href="../09-data-normalization-engine/">Data Normalization Engine (Chapter 9)</a>.</p>
+<h2 id="6-ai-performs-semantic-mapping-not-csv-parsing">6. AI Performs Semantic Mapping, Not CSV Parsing<a class="headerlink" href="#6-ai-performs-semantic-mapping-not-csv-parsing" title="Permanent link">&para;</a></h2>
+<p>There is a huge difference between asking the AI to parse a CSV and asking it to perform <strong>semantic mapping</strong> on already-structured records.</p>
+<p>The backend gives the AI a clean record:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;Customer Name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;John&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;Contact&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;9876543210&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;Mail&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;abc@gmail.com&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;Remarks&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Interested&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>The AI only answers with the mapped CRM record:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;John&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;mobile&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;9876543210&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;email&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;abc@gmail.com&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;crm_note&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Interested&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>This is far more reliable than handing the model raw CSV text.</p>
+<h2 id="7-prompt-design-philosophy">7. Prompt Design Philosophy<a class="headerlink" href="#7-prompt-design-philosophy" title="Permanent link">&para;</a></h2>
+<p>The prompt is arguably 40% of the assignment. A prompt of the form "Extract CRM fields." is insufficient. Instead, the prompt is designed as a contract:</p>
+<div class="highlight"><pre><span></span><code>You are an enterprise CRM ingestion engine.
+
+Your job is NOT to summarize.
+Your job is NOT to infer imaginary values.
+
+Only map information that exists.
+Never hallucinate.
+If confidence is low return null.
+Return valid JSON only.
+
+Allowed CRM status:
+...
+
+Allowed data source:
+...
+
+Rules:
+...
+
+Examples:
+...
+
+Counter Examples:
+...
+
+Output schema:
+...
+</code></pre></div>
+<blockquote>
+<p><strong>Principle:</strong> Prompt quality matters more than model choice.</p>
+</blockquote>
+<p>Full prompt design is covered in <a href="../11-prompt-engineering/">Chapter 11 — Prompt Engineering &amp; Semantic Intelligence</a>.</p>
+<h2 id="8-batch-processing">8. Batch Processing<a class="headerlink" href="#8-batch-processing" title="Permanent link">&para;</a></h2>
+<p>Never send 5,000 rows to the model in a single request. Instead, the CSV is split into chunks (for example, 25 rows each) which are processed in parallel:</p>
+<div class="highlight"><pre><span></span><code>CSV → chunks → [25 rows] [25 rows] [25 rows] … → parallel AI requests
+</code></pre></div>
+<p>Production systems batch requests to balance latency, throughput, and cost. Parallelism must respect provider rate limits.</p>
+<h2 id="9-json-validation-never-trust-ai">9. JSON Validation — Never Trust AI<a class="headerlink" href="#9-json-validation-never-trust-ai" title="Permanent link">&para;</a></h2>
+<p>This is where many projects fail. Every AI response is validated (for example, with Zod) before it is accepted:</p>
+<pre class="mermaid"><code>flowchart TD
+    A[AI returns JSON] --&gt; B{Zod schema valid?}
+    B --&gt;|yes| C[Continue pipeline]
+    B --&gt;|no| D[Retry]</code></pre>
+<p>Validation happens <strong>always</strong>, on every response.</p>
+<h2 id="10-retry-strategy">10. Retry Strategy<a class="headerlink" href="#10-retry-strategy" title="Permanent link">&para;</a></h2>
+<p>Suppose the model returns broken JSON:</p>
+<div class="highlight"><pre><span></span><code>{
+&quot;name&quot;:
+</code></pre></div>
+<p>The production response is a layered recovery ladder — never crash the entire import:</p>
+<div class="highlight"><pre><span></span><code>Attempt 1
+ → failed
+ → repair JSON
+ → failed
+ → retry
+ → failed
+ → mark batch failed
+ → continue next batch
+</code></pre></div>
+<p>A failed batch is isolated; the remaining batches still complete.</p>
+<h2 id="11-confidence-checks">11. Confidence Checks<a class="headerlink" href="#11-confidence-checks" title="Permanent link">&para;</a></h2>
+<p>Instead of blindly accepting AI output, each record passes through an acceptance checklist:</p>
+<div class="highlight"><pre><span></span><code>AI output
+ → validator
+ → required field present?
+ → email valid?
+ → phone valid?
+ → status allowed?
+ → date valid?
+ → accept
+</code></pre></div>
+<h2 id="12-skip-rule-engine">12. Skip-Rule Engine<a class="headerlink" href="#12-skip-rule-engine" title="Permanent link">&para;</a></h2>
+<p>The assignment mandates skipping records with no email <strong>and</strong> no phone. Rather than an inline <code>if</code>, this is a dedicated rule engine that produces a reason for every skip:</p>
+<div class="highlight"><pre><span></span><code>Rule Engine
+ → Missing email?
+ → Missing phone?
+ → Skip
+ → Reason: &quot;No contact information&quot;
+</code></pre></div>
+<p>The UI can then show each skipped record with its reason ("Skipped — Reason: No contact info"), which is a much better user experience. See <a href="../13-validation-trust-engine/">Chapter 13 — Validation, Business Rules &amp; Trust Engine</a>.</p>
+<h2 id="13-frontend-flow">13. Frontend Flow<a class="headerlink" href="#13-frontend-flow" title="Permanent link">&para;</a></h2>
+<p>Rather than the minimal Upload → Preview → Import flow, the frontend is designed as a complete ingestion journey:</p>
+<pre class="mermaid"><code>flowchart TD
+    A[Upload] --&gt; B[Validation]
+    B --&gt; C[Preview]
+    C --&gt; D[File statistics]
+    D --&gt; E[Confirm]
+    E --&gt; F[Progress]
+    F --&gt; G[Live processing]
+    G --&gt; H[Results]
+    H --&gt; I[Download JSON]
+    I --&gt; J[Done]</code></pre>
+<h3 id="131-during-preview">13.1 During Preview<a class="headerlink" href="#131-during-preview" title="Permanent link">&para;</a></h3>
+<p>The preview screen shows file intelligence, not just rows:</p>
+<div class="highlight"><pre><span></span><code>Rows
+Columns
+Missing Values
+Duplicate Headers
+Encoding
+Estimated Tokens
+Estimated AI Cost
+Detected Delimiter
+</code></pre></div>
+<h3 id="132-during-import">13.2 During Import<a class="headerlink" href="#132-during-import" title="Permanent link">&para;</a></h3>
+<p>Instead of a spinner, show live pipeline progress:</p>
+<div class="highlight"><pre><span></span><code>███████░░░░
+
+Rows processed   350 / 1200
+Current batch    8 / 24
+AI requests      7 complete
+Skipped          23
+Imported         327
+</code></pre></div>
+<p>Even if internally this is driven by batch-completion updates, it reads as a real ingestion pipeline.</p>
+<h3 id="133-result-screen">13.3 Result Screen<a class="headerlink" href="#133-result-screen" title="Permanent link">&para;</a></h3>
+<p>The result is a dashboard, not only a table:</p>
+<div class="highlight"><pre><span></span><code>Imported          421
+Skipped           17
+Success           96%
+Detected Fields   14
+Unknown Columns   6
+Duration          18 sec
+</code></pre></div>
+<h2 id="14-error-handling-catalogue">14. Error Handling Catalogue<a class="headerlink" href="#14-error-handling-catalogue" title="Permanent link">&para;</a></h2>
+<p>The system must handle, at minimum:</p>
+<div class="highlight"><pre><span></span><code>Invalid CSV
+Huge file
+UTF-16
+Duplicate headers
+Missing delimiter
+Corrupted encoding
+Empty file
+Malformed quotes
+GPT timeout
+GPT rate limit
+JSON parse failure
+AI hallucination
+Network failure
+Batch retry exhausted
+</code></pre></div>
+<h2 id="15-logging">15. Logging<a class="headerlink" href="#15-logging" title="Permanent link">&para;</a></h2>
+<p>Production applications log every stage of the import lifecycle:</p>
+<div class="highlight"><pre><span></span><code>Import Started
+ → CSV Parsed
+ → Batch Created
+ → Batch 1 Sent
+ → AI Returned
+ → Validation Passed
+ → Statistics Updated
+ → Completed
+</code></pre></div>
+<p>Structured logs make debugging and observability much easier (see <a href="../15-observability/">Chapter 15 — Observability</a>).</p>
+<h2 id="16-deployment-topology">16. Deployment Topology<a class="headerlink" href="#16-deployment-topology" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>Next.js  → Vercel
+Backend  → Railway
+AI       → OpenAI
+GitHub   → Actions → Auto Deploy
+</code></pre></div>
+<h2 id="17-repository-layout">17. Repository Layout<a class="headerlink" href="#17-repository-layout" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>apps/
+  web/
+  api/
+
+packages/
+  shared-types/
+  validation/
+  prompt/
+  ui/
+
+infra/
+  docker/
+  github-actions/
+</code></pre></div>
+<p>Even for a small project, separating reusable pieces demonstrates architectural thinking.</p>
+<h2 id="18-differentiating-features">18. Differentiating Features<a class="headerlink" href="#18-differentiating-features" title="Permanent link">&para;</a></h2>
+<p>Beyond the base requirements, the following features materially strengthen the solution:</p>
+<ol>
+<li><strong>Schema inference before AI.</strong> Detect obvious fields (email, phone, date) with deterministic logic and only ask the LLM to resolve ambiguous columns. This reduces cost and improves consistency.</li>
+<li><strong>Streaming CSV parsing</strong> so large files don't consume excessive memory.</li>
+<li><strong>Prompt versioning</strong> so prompt changes are tracked independently.</li>
+<li><strong>JSON schema validation</strong> with automatic retry on malformed responses.</li>
+<li><strong>Observability</strong> with request IDs, structured logs, and timing metrics.</li>
+<li><strong>Large-file support</strong> using virtualized tables on the frontend.</li>
+<li><strong>Dockerized local development</strong> with one command to start everything.</li>
+<li><strong>Unit tests</strong> for preprocessing, validation, and rule engine logic.</li>
+<li><strong>Rate limiting and concurrency control</strong> for AI requests.</li>
+<li><strong>Download results</strong> as CSV or JSON after processing.</li>
+</ol>
+<h2 id="19-design-recommendation">19. Design Recommendation<a class="headerlink" href="#19-design-recommendation" title="Permanent link">&para;</a></h2>
+<p>The system is built as if it were the first module of a commercial AI CRM ingestion platform. That means emphasizing:</p>
+<ul>
+<li><strong>Clean, layered architecture</strong> (separation of concerns)</li>
+<li><strong>AI as one component</strong>, not the whole application</li>
+<li><strong>Deterministic preprocessing and validation</strong> before and after the LLM</li>
+<li><strong>Fault tolerance</strong> (batching, retries, graceful failures)</li>
+<li><strong>Excellent user experience</strong> (preview, progress, summaries, clear errors)</li>
+<li><strong>Production engineering practices</strong> (logging, testing, deployment, documentation)</li>
+</ul>
+<p>This approach demonstrates far more than framework knowledge — it shows how to design reliable AI-powered systems that can evolve beyond a coding assignment.</p>
+<h2 id="implementation-tasks">Implementation Tasks<a class="headerlink" href="#implementation-tasks" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[ ] <strong>Task 2.1 — Schema inference pre-pass.</strong> Detect obvious fields (email, phone, date) deterministically and send only ambiguous columns to the LLM.</li>
+<li>[ ] <strong>Task 2.2 — Streaming CSV parser.</strong> Parse large files as streams so memory usage stays bounded.</li>
+<li>[ ] <strong>Task 2.3 — Prompt versioning.</strong> Track prompt changes independently of application code.</li>
+<li>[ ] <strong>Task 2.4 — JSON schema validation with retry.</strong> Validate every AI response against a schema and automatically retry malformed responses.</li>
+<li>[ ] <strong>Task 2.5 — Observability baseline.</strong> Add request IDs, structured logs, and timing metrics across the pipeline.</li>
+<li>[ ] <strong>Task 2.6 — Virtualized preview tables.</strong> Support large files on the frontend with virtualized rendering.</li>
+<li>[ ] <strong>Task 2.7 — Dockerized development.</strong> Provide one-command local startup for the full stack.</li>
+<li>[ ] <strong>Task 2.8 — Unit tests for deterministic layers.</strong> Cover preprocessing, validation, and rule-engine logic with unit tests.</li>
+<li>[ ] <strong>Task 2.9 — Rate limiting and concurrency control.</strong> Enforce provider-aware limits on parallel AI requests.</li>
+<li>[ ] <strong>Task 2.10 — Result export.</strong> Allow downloading processed results as CSV or JSON.</li>
+</ul>
+<hr />
+<h2 id="related-chapters">Related Chapters<a class="headerlink" href="#related-chapters" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../01-assignment-specification/">Chapter 1 — Assignment Specification</a> — the requirements this analysis responds to</li>
+<li><a href="../03-engineering-roadmap/">Chapter 3 — Engineering Roadmap &amp; Methodology</a> — turns this design approach into an 18-volume build plan</li>
+<li><a href="../04-pipeline-architecture/">Chapter 4 — The Pipeline Architecture Mindset</a> — deepens the pipeline/factory framing introduced here</li>
+<li><a href="../09-data-normalization-engine/">Chapter 9 — Data Normalization Engine</a> — full design of the deterministic preprocessing layer</li>
+<li><a href="../14-execution-orchestration/">Chapter 14 — Execution Engine, Orchestration &amp; Concurrency</a> — full design of batching, retries, and parallelism</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "toc.follow", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
