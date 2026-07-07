@@ -36,6 +36,12 @@ apps/
     src/modules/          health/, upload/, preview/, import/ (routes+controller+service)
                           ai/, validation/, execution/ (reserved, land in later phases)
     src/types/            Express type augmentation (requestId)
+    src/pipeline/         The processing engine — see src/pipeline/README.md.
+                          domain/ (entities), contracts/ (StageResult, PipelineStage),
+                          context/ (PipelineContext, ImportState machine), events/,
+                          stages/{upload,csv-parsing,normalization} (real) +
+                          {semantic-extraction,validation,aggregation} (placeholders),
+                          runner/ (PipelineRunner). Framework-free; not yet wired to HTTP.
 
 packages/
   shared-types/           Wire contracts shared by web + api: ApiResponse envelope,
@@ -71,10 +77,11 @@ docs/                     Architecture & engineering handbook (20 chapters)
 
 ## Roadmap
 
-| Phase    | Scope                                                                                                                          |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| 1 (done) | Monorepo foundation: apps, shared types, tooling, placeholder endpoints                                                        |
-| 2        | Deterministic engines: CSV parsing (encoding/delimiter detection, streaming), normalization                                    |
-| 3        | AI core: provider adapter (OpenAI default), token-aware batching, 6-layer prompt, JSON repair/retry, validation & trust engine |
-| 4        | Frontend workflow: state-machine driven Upload → Preview → Confirm → Progress → Results                                        |
-| 5        | Ship: unit tests, Docker, CI, deployment (Vercel + Railway), README polish                                                     |
+| Phase    | Scope                                                                                                                                                                                                                                                                   |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 (done) | Monorepo foundation: apps, shared types, tooling, placeholder endpoints                                                                                                                                                                                                 |
+| 2 (done) | Pipeline architecture: domain models, stage contracts, `PipelineContext` + state machine, event system, `PipelineRunner`, and real Upload/CSV Parsing/Normalization stages. Semantic Extraction, Validation, Aggregation are typed placeholders. Not yet wired to HTTP. |
+| 3        | AI core: replace the Semantic Extraction placeholder with a provider adapter (OpenAI default), token-aware batching, 6-layer prompt, JSON repair/retry                                                                                                                  |
+| 3.5      | Validation & trust engine: replace the Validation placeholder — schema/field/business-rule checks, confidence scoring                                                                                                                                                   |
+| 4        | Frontend workflow: state-machine driven Upload → Preview → Confirm → Progress → Results; wire `POST /preview` and `POST /import` to `createPipelineRunner()`                                                                                                            |
+| 5        | Ship: unit tests, Docker, CI, deployment (Vercel + Railway), README polish                                                                                                                                                                                              |
