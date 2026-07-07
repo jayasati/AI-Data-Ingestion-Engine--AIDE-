@@ -19,3 +19,6 @@ coverage/
 # OS / editor
 .DS_Store
 Thumbs.db
+
+# Claude Code session state
+.claude/
