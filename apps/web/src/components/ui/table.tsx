@@ -29,7 +29,7 @@ export function Table<T>({
 }: TableProps<T>) {
   return (
     <div className="max-h-[32rem] overflow-auto rounded-lg border border-border">
-      <table className="w-full border-collapse text-left text-sm">
+      <table className="min-w-full border-collapse text-left text-sm">
         {caption ? <caption className="sr-only">{caption}</caption> : null}
         <thead className="sticky top-0 z-10 bg-surface-muted">
           <tr>

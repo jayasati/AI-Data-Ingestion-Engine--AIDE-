@@ -1,9 +1,5 @@
 import type { Metadata } from "next";
-import { ImportStepper } from "@/features/import/import-stepper";
-import { UploadArea } from "@/features/import/upload-area";
-import { PreviewPlaceholder } from "@/features/import/preview-placeholder";
-import { ProgressPlaceholder } from "@/features/import/progress-placeholder";
-import { ResultPlaceholder } from "@/features/import/result-placeholder";
+import { ImportWorkflow } from "@/features/import/import-workflow";
 
 export const metadata: Metadata = { title: "Import" };
 
@@ -17,11 +13,7 @@ export default function ImportPage() {
         </p>
       </header>
 
-      <ImportStepper currentStep="upload" />
-      <UploadArea />
-      <PreviewPlaceholder />
-      <ProgressPlaceholder />
-      <ResultPlaceholder />
+      <ImportWorkflow />
     </div>
   );
 }
