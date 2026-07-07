@@ -4,3 +4,4 @@ export { NotFoundError } from "@/core/errors/not-found-error";
 export { ConfigurationError } from "@/core/errors/configuration-error";
 export { InfrastructureError } from "@/core/errors/infrastructure-error";
 export { UnknownError } from "@/core/errors/unknown-error";
+export { FileProcessingError } from "@/core/errors/file-processing-error";
