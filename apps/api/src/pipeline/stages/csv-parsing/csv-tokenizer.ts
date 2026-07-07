@@ -3,23 +3,25 @@
  * embedded in quoted fields, and doubled quotes (`""`) as an escaped quote.
  * Operates on the whole content at once (not line-by-line) specifically so an
  * embedded newline inside a quoted field is never mistaken for a row break.
+ *
+ * Implemented as a generator so a record is yielded the moment it completes,
+ * rather than requiring the whole file to be tokenized before anything can
+ * be read. `tokenizeCsv` collects the generator into an array for the
+ * current (in-memory) pipeline; a future streaming upload path can consume
+ * `iterateCsvRecords` directly, one record at a time, without this file
+ * changing. Today the content itself is still a fully materialized string —
+ * see RawUploadInput's docs for that scope boundary.
  */
-export function tokenizeCsv(content: string, delimiter: string): string[][] {
-  const records: string[][] = [];
+export function* iterateCsvRecords(content: string, delimiter: string): Generator<string[]> {
   let field = "";
   let record: string[] = [];
   let insideQuotes = false;
   let i = 0;
   const length = content.length;
 
-  const pushField = (): void => {
+  const takeField = (): void => {
     record.push(field);
     field = "";
-  };
-  const pushRecord = (): void => {
-    pushField();
-    records.push(record);
-    record = [];
   };
 
   while (i < length) {
@@ -47,18 +49,15 @@ export function tokenizeCsv(content: string, delimiter: string): string[][] {
       continue;
     }
     if (char === delimiter) {
-      pushField();
+      takeField();
       i += 1;
       continue;
     }
-    if (char === "\r") {
-      pushRecord();
-      i += content[i + 1] === "\n" ? 2 : 1;
-      continue;
-    }
-    if (char === "\n") {
-      pushRecord();
-      i += 1;
+    if (char === "\r" || char === "\n") {
+      takeField();
+      yield record;
+      record = [];
+      i += char === "\r" && content[i + 1] === "\n" ? 2 : 1;
       continue;
     }
 
@@ -67,8 +66,11 @@ export function tokenizeCsv(content: string, delimiter: string): string[][] {
   }
 
   if (field !== "" || record.length > 0) {
-    pushRecord();
+    takeField();
+    yield record;
   }
+}
 
-  return records;
+export function tokenizeCsv(content: string, delimiter: string): string[][] {
+  return [...iterateCsvRecords(content, delimiter)];
 }

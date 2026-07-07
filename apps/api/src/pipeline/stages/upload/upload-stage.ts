@@ -43,6 +43,7 @@ export class UploadStage implements PipelineStage<RawUploadInput, UploadContext>
       mimeType: input.mimeType.trim(),
       sizeBytes,
       content: input.content,
+      detectedEncoding: input.detectedEncoding,
       receivedAt: new Date().toISOString(),
     };
 

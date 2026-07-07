@@ -5,4 +5,5 @@ export * from "@/pipeline/events";
 export * from "@/pipeline/errors";
 export * from "@/pipeline/stages";
 export * from "@/pipeline/runner";
+export * from "@/pipeline/ingestion";
 export { createPipelineRunner } from "@/pipeline/create-pipeline-runner";
