@@ -28,27 +28,32 @@ apps/
   api/                    Express 5 backend (TypeScript, CommonJS build)
     src/config/           Typed, validated env loader (development | production | test)
     src/core/errors/      ApplicationError hierarchy (Validation, Configuration,
-                          Infrastructure, NotFound, Unknown)
+                          Infrastructure, NotFound, Unknown, FileProcessing)
     src/core/logger/      Logger interface + structured JSON console implementation
     src/core/http/        ApiResponse envelope builders
     src/core/container.ts Composition root — constructor injection, no DI framework
-    src/middleware/       request-id, request-logger, error-handler, not-found
-    src/modules/          health/, upload/, preview/, import/ (routes+controller+service)
-                          ai/, validation/, execution/ (reserved, land in later phases)
+    src/middleware/       request-id, request-logger, error-handler (maps MulterError too), not-found
+    src/modules/          health/ (real), upload/ (metadata-only placeholder),
+                          preview/ (real — multer + CSV Ingestion Engine, see below),
+                          import/ (placeholder). ai/, validation/, execution/ (reserved).
     src/types/            Express type augmentation (requestId)
     src/pipeline/         The processing engine — see src/pipeline/README.md.
                           domain/ (entities), contracts/ (StageResult, PipelineStage),
                           context/ (PipelineContext, ImportState machine), events/,
                           stages/{upload,csv-parsing,normalization} (real) +
                           {semantic-extraction,validation,aggregation} (placeholders),
-                          runner/ (PipelineRunner). Framework-free; not yet wired to HTTP.
+                          runner/ (PipelineRunner, not yet wired to HTTP),
+                          ingestion/ (CSV Ingestion Engine — see src/pipeline/ingestion/
+                          README.md: header engine, column profiler, dataset profiler,
+                          dataset intelligence, preview generator. Drives POST /preview.)
 
 packages/
   shared-types/           Wire contracts shared by web + api: ApiResponse envelope,
                           UploadRequest/Response, ImportStatus, ResultSummary,
-                          HealthResponse. The canonical CRM record schema lands here.
-  validation/             Deterministic validation & trust engine (Phase 3)
-  prompt/                 Prompt composition, versioning & registry (Phase 3)
+                          HealthResponse, DatasetPreviewResponse + profile/metadata DTOs.
+                          The canonical CRM record schema lands here.
+  validation/             Deterministic validation & trust engine (future phase)
+  prompt/                 Prompt composition, versioning & registry (future phase)
 
 infra/
   docker/                 Dockerfiles for api and web (finalized in ship phase)
@@ -61,27 +66,28 @@ docs/                     Architecture & engineering handbook (20 chapters)
 
 - **API envelope.** Every endpoint returns `{ success, data, error, metadata, timestamp, requestId }` (`ApiResponse<T>` in `@aide/shared-types`). Errors carry a stable machine-readable `code`; clients never parse messages.
 - **Correlation.** Middleware assigns a `requestId` per request; it appears in every log line and every response.
-- **Errors.** Backend code throws typed errors from the `ApplicationError` hierarchy; a single error-handler middleware maps them to HTTP statuses and the envelope. Unknown exceptions are wrapped, logged with stack, and returned as generic errors (no internals leak to clients).
+- **Errors.** Backend code throws typed errors from the `ApplicationError` hierarchy; a single error-handler middleware maps them (and Multer's own `MulterError`) to HTTP statuses and the envelope. Unknown exceptions are wrapped, logged with stack, and returned as generic errors (no internals leak to clients).
 - **Logging.** No `console.log`. Modules receive a `Logger` interface; the current implementation writes structured JSON lines. Swapping in a hosted provider later touches one file.
 - **Configuration.** All runtime values come from validated env config (`src/config`). No hardcoded ports, origins, or levels.
 
-## API surface (foundation phase)
+## API surface
 
-| Method | Path          | Status      | Purpose                             |
-| ------ | ------------- | ----------- | ----------------------------------- |
-| GET    | `/health`     | Implemented | Service status, version, uptime     |
-| POST   | `/upload`     | Placeholder | Accept CSV upload metadata          |
-| POST   | `/preview`    | Placeholder | Parse + preview rows (no AI)        |
-| POST   | `/import`     | Placeholder | Run the AI import pipeline          |
-| GET    | `/import/:id` | Placeholder | Poll import status / result summary |
+| Method | Path          | Status      | Purpose                                                                     |
+| ------ | ------------- | ----------- | --------------------------------------------------------------------------- |
+| GET    | `/health`     | Implemented | Service status, version, uptime                                             |
+| POST   | `/upload`     | Placeholder | Accept CSV upload metadata (JSON only, no file bytes)                       |
+| POST   | `/preview`    | Implemented | `multipart/form-data` (field `file`) → CSV Ingestion Engine preview (no AI) |
+| POST   | `/import`     | Placeholder | Run the AI import pipeline                                                  |
+| GET    | `/import/:id` | Placeholder | Poll import status / result summary                                         |
 
 ## Roadmap
 
-| Phase    | Scope                                                                                                                                                                                                                                                                   |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1 (done) | Monorepo foundation: apps, shared types, tooling, placeholder endpoints                                                                                                                                                                                                 |
-| 2 (done) | Pipeline architecture: domain models, stage contracts, `PipelineContext` + state machine, event system, `PipelineRunner`, and real Upload/CSV Parsing/Normalization stages. Semantic Extraction, Validation, Aggregation are typed placeholders. Not yet wired to HTTP. |
-| 3        | AI core: replace the Semantic Extraction placeholder with a provider adapter (OpenAI default), token-aware batching, 6-layer prompt, JSON repair/retry                                                                                                                  |
-| 3.5      | Validation & trust engine: replace the Validation placeholder — schema/field/business-rule checks, confidence scoring                                                                                                                                                   |
-| 4        | Frontend workflow: state-machine driven Upload → Preview → Confirm → Progress → Results; wire `POST /preview` and `POST /import` to `createPipelineRunner()`                                                                                                            |
-| 5        | Ship: unit tests, Docker, CI, deployment (Vercel + Railway), README polish                                                                                                                                                                                              |
+| Phase    | Scope                                                                                                                                                                                                                                                                                                   |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 (done) | Monorepo foundation: apps, shared types, tooling, placeholder endpoints                                                                                                                                                                                                                                 |
+| 2 (done) | Pipeline architecture: domain models, stage contracts, `PipelineContext` + state machine, event system, `PipelineRunner`, and real Upload/CSV Parsing/Normalization stages. Semantic Extraction, Validation, Aggregation are typed placeholders. Not yet wired to HTTP.                                 |
+| 3 (done) | CSV Ingestion Engine: File Inspection (BOM/encoding), Header Engine, Column Profiler, Dataset Profiler (structural quality score), Dataset Intelligence (AI-free type hints), Preview Generator. Real `POST /preview` (multer, UTF-8/UTF-16 decoding). See `apps/api/src/pipeline/ingestion/README.md`. |
+| 4        | AI core: replace the Semantic Extraction placeholder with a provider adapter (OpenAI default), token-aware batching, 6-layer prompt, JSON repair/retry                                                                                                                                                  |
+| 4.5      | Validation & trust engine: replace the Validation placeholder — schema/field/business-rule checks, confidence scoring                                                                                                                                                                                   |
+| 5        | Frontend workflow: state-machine driven Upload → Preview → Confirm → Progress → Results; wire `POST /import` to `createPipelineRunner()`                                                                                                                                                                |
+| 6        | Ship: Docker, CI, deployment (Vercel + Railway), README polish                                                                                                                                                                                                                                          |
