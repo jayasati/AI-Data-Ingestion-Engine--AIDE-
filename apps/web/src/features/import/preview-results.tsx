@@ -3,6 +3,7 @@ import type { ColumnProfileDTO, DatasetPreviewResponse, PreviewRowDTO } from "@a
 import { Badge, type BadgeVariant } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, type TableColumn } from "@/components/ui/table";
+import { NormalizationSummary } from "@/features/import/normalization-summary";
 
 const DELIMITER_LABELS: Record<string, string> = {
   ",": "Comma",
@@ -60,6 +61,7 @@ export function PreviewResults({ preview }: { preview: DatasetPreviewResponse })
     rows,
     previewRowCount,
     totalRowCount,
+    normalization,
   } = preview;
 
   const tableColumns: TableColumn<PreviewRowDTO>[] = [
@@ -167,6 +169,8 @@ export function PreviewResults({ preview }: { preview: DatasetPreviewResponse })
       </Card>
 
       <WarningsPanel warnings={warnings} />
+
+      <NormalizationSummary normalization={normalization} />
     </div>
   );
 }
