@@ -1,0 +1,11 @@
+Full Name,Email ID,Contact No.,City,Project,Lead Status,Enquiry Date,Budget,Remarks
+Rahul Sharma,rahul.sharma@example.com,+91 98765 43210,Bengaluru,Meridian Tower,Good Lead - Follow Up,2026-01-15,"$1,20,000",Interested in 3BHK
+Priya Nair,PRIYA.NAIR@EXAMPLE.COM,9845012345,Chennai,Eden Park Phase 2,Did Not Connect,15/01/2026,,Called twice no answer
+Amit Verma,amit.verma@example.com,9000011122,Pune,Varah Swamy Residency,SALE_DONE,01-Feb-2026,"25,00,000",Booked 2BHK unit
+No Contact Lead,,,Mumbai,Sarjapur Plots,New,2026-02-03,,Missing both email and phone - should be skipped
+Sneha Iyer,"sneha.iyer@example.com, sneha.alt@example.com",+91-98111-22233,Hyderabad,Sarjapur Plots - Phase 1,Bad Lead,"Feb 5, 2026",,Not interested anymore
+Karan Mehta,karan.mehta@example.com,"9876500011, 9876500012",Mumbai,Leads on Demand,Good Lead - Follow Up,2026/02/10,"₹18,50,000",Wants a site visit
+  Divya Pillai  ,  divya.pillai@example.com  ,9911223344,Delhi,Referral,Interested,10.02.2026,,  Extra   whitespace   in   fields
+Farhan Sheikh,farhan.sheikh@example.com,9911223345,Kolkata,Google Ads,DNC,not a date,,Could not reach
+Ghost Record,,,Ahmedabad,Meridian Tower,Bad Lead,2026-02-12,,No contact info at all - should be skipped
+Anita Desai,anita.desai@example.com,9911223346,Jaipur,Eden Park,Sale Done,12-02-2026,"12,00,000",Final payment received

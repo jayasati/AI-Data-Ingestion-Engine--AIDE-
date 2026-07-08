@@ -1,0 +1,8 @@
+Name , Email , Phone , Budget,Interested,Notes
+  Rahul Sharma  ,  RAHUL.SHARMA@EXAMPLE.COM  ,  +91 98444 11111  ,"$1,200,000",Yes,  Extra   spaces   everywhere
+Priya Nair,Priya.Nair@Example.COM,9844411112,"Rs. 85,00,000",Y,Mixed-case email
+Amit Verma,amit.verma@example.com,9844411113,"1,50,000",No,No currency symbol
+Sneha Iyer,sneha.iyer@example.com,9844411114,,N,Curly quotes: “smart” and ‘quotes’
+Karan Mehta,karan.mehta@example.com,9844411115,2500000,true,Plain number budget
+Vikram Rao,vikram.rao@example.com,9844411116,,false,No budget given
+Anita Desai,,,,,No email or phone at all

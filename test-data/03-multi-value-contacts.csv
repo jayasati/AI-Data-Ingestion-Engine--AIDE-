@@ -1,0 +1,6 @@
+Name,Emails,Phones,City,Notes
+Ritu Malhotra,ritu.malhotra@example.com,+91 98765 11111,Delhi,Primary contact
+Sanjay Gupta,"sanjay.gupta@example.com, sanjay.backup@example.com",+91 98765 22222,Noida,Two email addresses provided
+Neha Kapoor,neha.kapoor@example.com,"+91 98765 33333, +91 98765 33344",Gurgaon,Home and work numbers
+Arjun Reddy,"arjun.reddy@example.com; arjun.alt@example.com","9876544444; 9876544445",Hyderabad,Semicolon-separated pair
+Kavita Joshi,kavita.joshi@example.com and kavita.j2@example.com,9876555555,Pune,"""And""-separated emails"

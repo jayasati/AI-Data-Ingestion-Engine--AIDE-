@@ -1,0 +1,7 @@
+Name,Email,Mobile,City,Notes
+Ramesh Iyer,ramesh.iyer@example.com,9812345670,Bengaluru,Has both email and phone - should be kept
+Sunita Rao,,9812345671,Chennai,Phone only - should be kept
+Deepak Nair,deepak.nair@example.com,,Pune,Email only - should be kept
+Ghost Lead,,,Mumbai,No email and no phone - should be SKIPPED per the hard rule
+Another Ghost,,,Delhi,Also no contact info - should be SKIPPED
+Meera Pillai,meera.pillai@example.com,9812345672,Hyderabad,Has both - should be kept
