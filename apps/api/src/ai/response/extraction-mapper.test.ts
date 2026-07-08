@@ -109,4 +109,51 @@ describe("validateAndMapExtraction", () => {
     expect(result.extraction.records).toHaveLength(1);
     expect(result.extraction.records[0].fields.every((f) => f.value === null)).toBe(true);
   });
+
+  it("accepts a bare string value without the {value, sourceHeader} wrapper", () => {
+    // Regression: observed live against gpt-4o-mini, which returns
+    // `fields: { name: "Rahul Sharma", email: "..." }` (flat values) despite
+    // the prompt asking for `{ value, sourceHeader }` per field — every value
+    // was previously silently dropped to null.
+    const result = validateAndMapExtraction({
+      records: [{ row: 1, fields: { name: "Rahul Sharma", email: "rahul@example.com" } }],
+    });
+    const record = result.extraction.records[0];
+    expect(record.fields.find((f) => f.targetField === "name")).toMatchObject({
+      value: "Rahul Sharma",
+      sourceHeader: "",
+      confidence: 1,
+    });
+    expect(record.fields.find((f) => f.targetField === "email")).toMatchObject({
+      value: "rahul@example.com",
+      confidence: 1,
+    });
+  });
+
+  it("accepts a bare null value without the wrapper, mapped to value null", () => {
+    const result = validateAndMapExtraction({ records: [{ row: 1, fields: { company: null } }] });
+    const field = result.extraction.records[0].fields.find((f) => f.targetField === "company");
+    expect(field?.value).toBeNull();
+    expect(field?.confidence).toBe(0);
+  });
+
+  it("coerces a bare number or boolean value to a string", () => {
+    const result = validateAndMapExtraction({
+      records: [{ row: 1, fields: { mobile_without_country_code: 9876543210, crm_note: true } }],
+    });
+    const record = result.extraction.records[0];
+    expect(record.fields.find((f) => f.targetField === "mobile_without_country_code")?.value).toBe(
+      "9876543210",
+    );
+    expect(record.fields.find((f) => f.targetField === "crm_note")?.value).toBe("true");
+  });
+
+  it("still respects enum validation on a bare (unwrapped) crm_status value", () => {
+    const result = validateAndMapExtraction({
+      records: [{ row: 1, fields: { crm_status: "New" } }],
+    });
+    const field = result.extraction.records[0].fields.find((f) => f.targetField === "crm_status");
+    expect(field?.value).toBeNull();
+    expect(result.warnings.map((w) => w.code)).toContain("INVALID_CRM_STATUS");
+  });
 });
