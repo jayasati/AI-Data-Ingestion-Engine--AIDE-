@@ -29,6 +29,9 @@ describe("looksLikeDate", () => {
     ["1/2/26", true],
     ["2026-02-01", true],
     ["12.05.2026", true],
+    ["2026/01/15", true],
+    ["15-Jan-2026", true],
+    ["12 May 2026", true],
     ["not a date", false],
     ["", false],
   ])("%s -> %s", (value, expected) => {

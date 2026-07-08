@@ -13,6 +13,15 @@ describe("DateRule", () => {
     expect(rule.canApply("hello")).toBe(false);
   });
 
+  it.each(["2026-01-15", "2026/01/15", "12-May-2026", "15/01/2026", "15.01.2026"])(
+    "canApply is true for every format apply() can actually parse: %s",
+    (value) => {
+      expect(rule.canApply(value)).toBe(true);
+      const details = rule.apply(value).details as DateFieldDetails;
+      expect(details.iso).not.toBeNull();
+    },
+  );
+
   it("parses ISO 8601 (YYYY-MM-DD)", () => {
     const result = rule.apply("2026-01-15");
     expect(result.value).toBe("2026-01-15");
