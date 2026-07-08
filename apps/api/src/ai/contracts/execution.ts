@@ -1,5 +1,6 @@
 import type { StageIssue } from "@/pipeline/contracts/stage-result";
 import type { AITokenUsage } from "@/ai/contracts/llm-provider";
+import type { PromptExecutionMetadata } from "@/prompt";
 
 /**
  * "success": a usable extraction was produced (with or without warnings).
@@ -7,8 +8,12 @@ import type { AITokenUsage } from "@/ai/contracts/llm-provider";
  *   into structured data — see ParserDiagnostic for detail.
  * "provider_error": the provider call itself failed (auth, quota, etc).
  * "timeout": the provider call exceeded the configured timeout.
+ * "compilation_error": the Prompt Engineering Platform itself failed to
+ *   produce a valid prompt (see `PromptCompilationError`) — the provider was
+ *   never called.
  */
-export type AIExecutionStatus = "success" | "parser_error" | "provider_error" | "timeout";
+export type AIExecutionStatus =
+  "success" | "parser_error" | "provider_error" | "timeout" | "compilation_error";
 
 export interface ParserDiagnostic {
   readonly code: string;
@@ -35,4 +40,6 @@ export interface AIExecutionReport {
   readonly status: AIExecutionStatus;
   readonly warnings: readonly StageIssue[];
   readonly parserDiagnostics: readonly ParserDiagnostic[];
+  /** Null only when `status === "compilation_error"` — every other status compiled a real prompt. */
+  readonly promptMetadata: PromptExecutionMetadata | null;
 }

@@ -224,7 +224,8 @@ describe("AIOrchestrator", () => {
 
     const userMessage = captured!.messages.find((m) => m.role === "user")!.content;
     expect(userMessage).toContain("Detected dataset type");
-    expect(userMessage).toContain('"Zzyzx Qwerty": no confident guess');
+    expect(userMessage).toContain('"Zzyzx Qwerty"');
+    expect(userMessage).toContain("no confident guess");
   });
 
   it("skips a header's semantic hint once it is confident enough to map deterministically", async () => {
@@ -266,6 +267,50 @@ describe("AIOrchestrator", () => {
 
     const userMessage = captured!.messages.find((m) => m.role === "user")!.content;
     expect(userMessage).not.toContain("Detected dataset type");
+  });
+
+  it("attaches promptMetadata from the Prompt Engineering Platform on a successful run", async () => {
+    const provider = fakeProvider(async () => fakeResponse(validResponseText()));
+    const orchestrator = new AIOrchestrator(provider, CONFIG);
+    const { report } = await orchestrator.run({ normalizedDataset: buildDataset() });
+
+    expect(report.promptMetadata).not.toBeNull();
+    expect(report.promptMetadata?.templateId).toBe("crm-extraction");
+    expect(report.promptMetadata?.estimatedPromptTokens).toBeGreaterThan(0);
+    expect(report.promptVersion).toBe(report.promptMetadata?.promptVersion);
+  });
+
+  it("still attaches promptMetadata when the provider call itself fails", async () => {
+    const provider = fakeProvider(async () => {
+      throw new AIProviderError("fake", "AUTHENTICATION_FAILURE", "bad key");
+    });
+    const orchestrator = new AIOrchestrator(provider, CONFIG);
+    const { report } = await orchestrator.run({ normalizedDataset: buildDataset() });
+
+    expect(report.status).toBe("provider_error");
+    expect(report.promptMetadata).not.toBeNull();
+  });
+
+  it("returns a compilation_error report and never calls the provider when the prompt fails validation", async () => {
+    const complete = vi.fn(async () => fakeResponse(validResponseText()));
+    const provider = fakeProvider(complete);
+    const oversizedValue = "x".repeat(100_000);
+    const dataset: NormalizedDataset = {
+      headers: ["Notes"],
+      records: [
+        { rowNumber: 1, fields: [field("Notes", oversizedValue)], warnings: [], hasErrors: false },
+      ],
+      recordCount: 1,
+      report: EMPTY_REPORT,
+    };
+
+    const orchestrator = new AIOrchestrator(provider, CONFIG);
+    const { extraction, report } = await orchestrator.run({ normalizedDataset: dataset });
+
+    expect(report.status).toBe("compilation_error");
+    expect(report.promptMetadata).toBeNull();
+    expect(extraction.records).toHaveLength(0);
+    expect(complete).not.toHaveBeenCalled();
   });
 
   it("logs via the optional logger without throwing when none is provided", async () => {

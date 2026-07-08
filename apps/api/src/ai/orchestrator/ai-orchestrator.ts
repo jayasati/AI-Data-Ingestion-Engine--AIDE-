@@ -9,7 +9,6 @@ import type {
 } from "@/ai/contracts/execution";
 import type { AIRequest, AIResponse, LLMProvider } from "@/ai/contracts/llm-provider";
 import { buildDatasetContext, type DatasetContext } from "@/ai/context/dataset-context-builder";
-import { compilePrompt, PROMPT_VERSION } from "@/ai/prompt/prompt-compiler";
 import { estimateCostUsd } from "@/ai/orchestrator/token-estimator";
 import { parseAIResponse, validateAndMapExtraction } from "@/ai/response";
 import { OUTPUT_SCHEMA_VERSION } from "@/ai/schema/crm-output-schema";
@@ -17,7 +16,14 @@ import type { StageIssue } from "@/pipeline/contracts/stage-result";
 import type { SemanticExtractionResult } from "@/pipeline/domain/extraction";
 import type { NormalizedDataset } from "@/pipeline/domain/normalization";
 import { buildSemanticContext } from "@/semantic/context/semantic-context-builder";
-import { analyzeSemantics } from "@/semantic/semantic-engine";
+import { analyzeSemantics, type SemanticAnalysisResult } from "@/semantic/semantic-engine";
+import {
+  compilePrompt,
+  PROMPT_VERSION,
+  PromptCompilationError,
+  type CompiledPrompt,
+  type PromptExecutionMetadata,
+} from "@/prompt";
 
 export interface OrchestratorRequest {
   readonly normalizedDataset: NormalizedDataset;
@@ -34,12 +40,13 @@ const EMPTY_USAGE = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
 
 /**
  * Chooses nothing provider-specific — it only knows `LLMProvider`. Owns
- * compiling the prompt, calling the provider once, parsing and validating
- * the response, and assembling the execution report. Does not retry (single
- * attempt only): `AIConfig.retryPolicy` is a placeholder field for a future
- * retry-aware volume, and does not loop here ("NO Retry Engine" this volume).
- * Does not run batches in parallel: one call, one dataset's worth of records,
- * treated as a single batch — see ai/contracts/batch.ts for why.
+ * compiling the prompt (via the Prompt Engineering Platform, `@/prompt`),
+ * calling the provider once, parsing and validating the response, and
+ * assembling the execution report. Does not retry (single attempt only):
+ * `AIConfig.retryPolicy` is a placeholder field for a future retry-aware
+ * volume, and does not loop here ("NO Retry Engine" this volume). Does not
+ * run batches in parallel: one call, one dataset's worth of records, treated
+ * as a single batch — see ai/contracts/batch.ts for why.
  */
 export class AIOrchestrator {
   constructor(
@@ -51,18 +58,28 @@ export class AIOrchestrator {
   async run(request: OrchestratorRequest): Promise<OrchestratorResult> {
     const requestId = randomUUID();
     const startedAt = new Date();
+
+    const semanticResult: SemanticAnalysisResult | undefined = request.datasetContext
+      ? undefined
+      : analyzeSemantics(request.normalizedDataset);
     const datasetContext =
       request.datasetContext ??
-      buildDatasetContext(
-        request.normalizedDataset,
-        buildSemanticContext(analyzeSemantics(request.normalizedDataset)),
-      );
+      buildDatasetContext(request.normalizedDataset, buildSemanticContext(semanticResult!));
 
-    const compiled = compilePrompt({
-      datasetContext,
-      batch: request.normalizedDataset.records,
-      supportsJsonMode: this.provider.capabilities.supportsJsonMode,
-    });
+    let compiled: CompiledPrompt;
+    try {
+      compiled = compilePrompt({
+        datasetContext,
+        normalizationReport: request.normalizedDataset.report,
+        columnProfiles: semanticResult?.columnProfiles,
+        batch: request.normalizedDataset.records,
+        supportsJsonMode: this.provider.capabilities.supportsJsonMode,
+        model: this.config.model,
+        maxContextTokens: this.provider.capabilities.maxContextTokens,
+      });
+    } catch (error) {
+      return this.buildCompilationFailureResult(requestId, startedAt, error);
+    }
 
     const aiRequest: AIRequest = {
       messages: [
@@ -81,18 +98,26 @@ export class AIOrchestrator {
       model: this.config.model,
       estimatedTokens: compiled.estimatedTokens,
       examplesUsed: compiled.examplesUsed,
+      negativeExamplesUsed: compiled.negativeExamplesUsed,
+      promptHash: compiled.promptHash,
     });
 
     let response: AIResponse;
     try {
       response = await this.provider.complete(aiRequest);
     } catch (error) {
-      return this.buildFailureResult(requestId, startedAt, "provider_error", error);
+      return this.buildFailureResult(requestId, startedAt, "provider_error", error, compiled);
     }
 
     const parsed = parseAIResponse(response.text);
     if (!parsed.success) {
-      return this.buildParserFailureResult(requestId, startedAt, response, parsed.diagnostics);
+      return this.buildParserFailureResult(
+        requestId,
+        startedAt,
+        response,
+        parsed.diagnostics,
+        compiled,
+      );
     }
 
     const validation = validateAndMapExtraction(parsed.data);
@@ -102,7 +127,7 @@ export class AIOrchestrator {
       requestId,
       provider: this.provider.id,
       model: response.model,
-      promptVersion: PROMPT_VERSION,
+      promptVersion: compiled.promptVersion,
       schemaVersion: OUTPUT_SCHEMA_VERSION,
       startedAt: startedAt.toISOString(),
       completedAt: completedAt.toISOString(),
@@ -112,6 +137,7 @@ export class AIOrchestrator {
       status: "success",
       warnings: [...validation.warnings, ...parsed.diagnostics.map(toStageIssue)],
       parserDiagnostics: parsed.diagnostics,
+      promptMetadata: compiled.metadata,
     };
 
     this.logger?.info("ai.request.completed", {
@@ -125,17 +151,17 @@ export class AIOrchestrator {
     return { extraction: validation.extraction, report };
   }
 
-  private buildFailureResult(
+  private buildCompilationFailureResult(
     requestId: string,
     startedAt: Date,
-    status: AIExecutionStatus,
     error: unknown,
   ): OrchestratorResult {
     const completedAt = new Date();
-    const code = error instanceof AIProviderError ? error.code : "AI_UNKNOWN_ERROR";
     const message = error instanceof Error ? error.message : String(error);
+    const code =
+      error instanceof PromptCompilationError ? "PROMPT_COMPILATION_FAILED" : "AI_UNKNOWN_ERROR";
 
-    this.logger?.error("ai.request.failed", { requestId, status, code, message });
+    this.logger?.error("ai.prompt.compilation_failed", { requestId, message });
 
     const report: AIExecutionReport = {
       requestId,
@@ -148,9 +174,43 @@ export class AIOrchestrator {
       latencyMs: completedAt.getTime() - startedAt.getTime(),
       tokenUsage: EMPTY_USAGE,
       estimatedCostUsd: null,
+      status: "compilation_error",
+      warnings: [{ code, message }],
+      parserDiagnostics: [],
+      promptMetadata: null,
+    };
+
+    return { extraction: { records: [] }, report };
+  }
+
+  private buildFailureResult(
+    requestId: string,
+    startedAt: Date,
+    status: AIExecutionStatus,
+    error: unknown,
+    compiled: CompiledPrompt,
+  ): OrchestratorResult {
+    const completedAt = new Date();
+    const code = error instanceof AIProviderError ? error.code : "AI_UNKNOWN_ERROR";
+    const message = error instanceof Error ? error.message : String(error);
+
+    this.logger?.error("ai.request.failed", { requestId, status, code, message });
+
+    const report: AIExecutionReport = {
+      requestId,
+      provider: this.provider.id,
+      model: this.config.model,
+      promptVersion: compiled.promptVersion,
+      schemaVersion: OUTPUT_SCHEMA_VERSION,
+      startedAt: startedAt.toISOString(),
+      completedAt: completedAt.toISOString(),
+      latencyMs: completedAt.getTime() - startedAt.getTime(),
+      tokenUsage: EMPTY_USAGE,
+      estimatedCostUsd: null,
       status,
       warnings: [{ code, message }],
       parserDiagnostics: [],
+      promptMetadata: compiled.metadata,
     };
 
     return { extraction: { records: [] }, report };
@@ -161,6 +221,7 @@ export class AIOrchestrator {
     startedAt: Date,
     response: AIResponse,
     diagnostics: readonly ParserDiagnostic[],
+    compiled: CompiledPrompt,
   ): OrchestratorResult {
     const completedAt = new Date();
     this.logger?.warn("ai.response.parse_failed", { requestId, diagnostics });
@@ -169,7 +230,7 @@ export class AIOrchestrator {
       requestId,
       provider: this.provider.id,
       model: response.model,
-      promptVersion: PROMPT_VERSION,
+      promptVersion: compiled.promptVersion,
       schemaVersion: OUTPUT_SCHEMA_VERSION,
       startedAt: startedAt.toISOString(),
       completedAt: completedAt.toISOString(),
@@ -179,6 +240,7 @@ export class AIOrchestrator {
       status: "parser_error",
       warnings: diagnostics.map(toStageIssue),
       parserDiagnostics: diagnostics,
+      promptMetadata: compiled.metadata,
     };
 
     return { extraction: { records: [] }, report };
@@ -188,3 +250,5 @@ export class AIOrchestrator {
 function toStageIssue(diagnostic: ParserDiagnostic): StageIssue {
   return { code: diagnostic.code, message: diagnostic.message };
 }
+
+export type { PromptExecutionMetadata };

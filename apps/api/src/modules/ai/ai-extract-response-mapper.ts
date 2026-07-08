@@ -4,11 +4,13 @@ import type {
   AIExtractResponse,
   ExtractedFieldDTO,
   ExtractedRecordDTO,
+  PromptExecutionMetadataDTO,
 } from "@aide/shared-types";
 import type { AIExecutionReport, ParserDiagnostic } from "@/ai/contracts/execution";
 import type { StageIssue } from "@/pipeline/contracts/stage-result";
 import type { ExtractedField, ExtractedRecord } from "@/pipeline/domain/extraction";
 import type { AIExtractResult } from "@/modules/ai/ai-extract.service";
+import type { PromptExecutionMetadata } from "@/prompt";
 
 /**
  * Translates the internal `AIExtractResult` (extraction + execution report)
@@ -60,5 +62,26 @@ function toAIExecutionReportDTO(report: AIExecutionReport): AIExecutionReportDTO
     status: report.status,
     warnings: report.warnings.map(toIssueDTO),
     parserDiagnostics: report.parserDiagnostics.map(toIssueDTO),
+    promptMetadata: report.promptMetadata
+      ? toPromptExecutionMetadataDTO(report.promptMetadata)
+      : null,
+  };
+}
+
+function toPromptExecutionMetadataDTO(
+  metadata: PromptExecutionMetadata,
+): PromptExecutionMetadataDTO {
+  return {
+    promptVersion: metadata.promptVersion,
+    promptHash: metadata.promptHash,
+    templateId: metadata.templateId,
+    examplesUsed: metadata.examplesUsed,
+    negativeExamplesUsed: metadata.negativeExamplesUsed,
+    contextSizeChars: metadata.contextSizeChars,
+    estimatedPromptTokens: metadata.estimatedPromptTokens,
+    estimatedCompletionTokens: metadata.estimatedCompletionTokens,
+    estimatedCostUsd: metadata.estimatedCostUsd,
+    compilationTimeMs: metadata.compilationTimeMs,
+    validationWarnings: metadata.validation.issues.map((issue) => issue.message),
   };
 }
