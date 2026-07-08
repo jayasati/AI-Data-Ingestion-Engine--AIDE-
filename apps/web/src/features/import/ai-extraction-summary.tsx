@@ -2,12 +2,29 @@ import type { ReactNode } from "react";
 import type {
   AIExecutionReportDTO,
   AIExtractResponse,
+  ApprovalStatusDTO,
+  DatasetValidationSummaryDTO,
   ExtractedRecordDTO,
   PromptExecutionMetadataDTO,
+  ValidatedRecordDTO,
 } from "@aide/shared-types";
 import { Badge, type BadgeVariant } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, type TableColumn } from "@/components/ui/table";
+
+const APPROVAL_VARIANT: Record<ApprovalStatusDTO, BadgeVariant> = {
+  approved: "success",
+  needs_review: "warning",
+  rejected: "danger",
+  skipped: "neutral",
+};
+
+const APPROVAL_LABEL: Record<ApprovalStatusDTO, string> = {
+  approved: "Approved",
+  needs_review: "Needs Review",
+  rejected: "Rejected",
+  skipped: "Skipped",
+};
 
 const STATUS_VARIANT: Record<AIExecutionReportDTO["status"], BadgeVariant> = {
   success: "success",
@@ -45,7 +62,9 @@ function formatLatency(ms: number): string {
  * provider response text — neither is present in `AIExtractResponse`.
  */
 export function AIExtractionSummary({ result }: { result: AIExtractResponse }) {
-  const { records, recordCount, report } = result;
+  const { records, recordCount, report, validation } = result;
+
+  const validationByRow = new Map(validation.records.map((record) => [record.rowNumber, record]));
 
   const fieldKeys = Array.from(
     new Set(records.flatMap((record) => record.fields.map((field) => field.targetField))),
@@ -57,6 +76,24 @@ export function AIExtractionSummary({ result }: { result: AIExtractResponse }) {
       header: "#",
       className: "text-muted-foreground",
       render: (record) => record.rowNumber,
+    },
+    {
+      key: "__approval",
+      header: "Status",
+      render: (record) => {
+        const verdict = validationByRow.get(record.rowNumber);
+        return verdict ? (
+          <Badge variant={APPROVAL_VARIANT[verdict.approvalStatus]}>
+            {APPROVAL_LABEL[verdict.approvalStatus]}
+          </Badge>
+        ) : null;
+      },
+    },
+    {
+      key: "__quality",
+      header: "Quality",
+      className: "text-muted-foreground",
+      render: (record) => validationByRow.get(record.rowNumber)?.qualityScore ?? "—",
     },
     ...fieldKeys.map((fieldKey): TableColumn<ExtractedRecordDTO> => {
       return {
@@ -116,11 +153,14 @@ export function AIExtractionSummary({ result }: { result: AIExtractResponse }) {
 
       {report.promptMetadata ? <PromptExecutionPanel metadata={report.promptMetadata} /> : null}
 
+      <DatasetHealthPanel summary={validation.summary} />
+
       <Card>
         <CardHeader>
           <CardTitle>Extracted Records</CardTitle>
           <CardDescription>
-            Each row's values as mapped onto the 15 canonical CRM fields.
+            Each row's values as mapped onto the 15 canonical CRM fields, plus the Trust Layer's
+            approval status and quality score for that row.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -133,6 +173,8 @@ export function AIExtractionSummary({ result }: { result: AIExtractResponse }) {
           />
         </CardContent>
       </Card>
+
+      <RecordDiagnosticsPanel records={validation.records} />
     </div>
   );
 }
@@ -202,6 +244,94 @@ function PromptExecutionPanel({ metadata }: { metadata: PromptExecutionMetadataD
             ))}
           </ul>
         ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * Trust Layer dataset-level rollup — approved/needs-review/rejected/skipped
+ * counts, average confidence, average quality score, and repair volume.
+ * Never renders per-field detail; that's `RecordDiagnosticsPanel`'s job.
+ */
+function DatasetHealthPanel({ summary }: { summary: DatasetValidationSummaryDTO }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Dataset Health</CardTitle>
+        <CardDescription>
+          The Trust Layer's verdict across every extracted record — nothing here is trusted
+          automatically.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="success">{summary.approvedCount} approved</Badge>
+          <Badge variant="warning">{summary.needsReviewCount} needs review</Badge>
+          <Badge variant="danger">{summary.rejectedCount} rejected</Badge>
+          <Badge variant="neutral">{summary.skippedCount} skipped</Badge>
+        </div>
+
+        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <SummaryStat
+            label="Avg. confidence"
+            value={`${Math.round(summary.averageConfidence * 100)}%`}
+          />
+          <SummaryStat label="Avg. quality score" value={String(summary.averageQualityScore)} />
+          <SummaryStat label="Total repairs" value={String(summary.totalRepairs)} />
+          <SummaryStat label="Records repaired" value={String(summary.recordsWithRepairs)} />
+        </dl>
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * Per-record Trust Layer detail — approval reason, repair count, and every
+ * validation/business/repair/approval issue that record raised. Only
+ * records with at least one issue are shown; a clean, fully-approved record
+ * has nothing to add beyond its table row.
+ */
+function RecordDiagnosticsPanel({ records }: { records: readonly ValidatedRecordDTO[] }) {
+  const flagged = records.filter((record) => record.issues.length > 0);
+  if (flagged.length === 0) {
+    return null;
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Record Diagnostics</CardTitle>
+        <CardDescription>
+          Validation, repair, and approval detail for every record the Trust Layer flagged.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ul className="max-h-96 space-y-3 overflow-y-auto">
+          {flagged.map((record) => (
+            <li key={record.rowNumber} className="rounded-lg border border-border p-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-medium">Row {record.rowNumber}</span>
+                <Badge variant={APPROVAL_VARIANT[record.approvalStatus]}>
+                  {APPROVAL_LABEL[record.approvalStatus]}
+                </Badge>
+                <span className="text-xs text-muted-foreground">{record.approvalReason}</span>
+              </div>
+              {record.repairCount > 0 ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {record.repairCount} repair{record.repairCount === 1 ? "" : "s"} applied
+                </p>
+              ) : null}
+              <ul className="mt-2 space-y-1">
+                {record.issues.map((issue, index) => (
+                  <li key={index} className="text-sm text-muted-foreground">
+                    {issue}
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ))}
+        </ul>
       </CardContent>
     </Card>
   );
