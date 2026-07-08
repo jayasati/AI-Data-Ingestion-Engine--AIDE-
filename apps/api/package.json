@@ -15,6 +15,7 @@
     "@aide/shared-types": "*",
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "libphonenumber-js": "^1.11.0",
     "multer": "^2.0.1"
   },
   "devDependencies": {
