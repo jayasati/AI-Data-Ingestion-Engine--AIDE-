@@ -10,7 +10,9 @@ import {
   SemanticExtractionStage,
   stageSucceeded,
   UploadStage,
+  ValidationStage,
   type SemanticExtractionResult,
+  type ValidationResult,
 } from "@/pipeline";
 import { toFileProcessingError } from "@/modules/ai/stage-failure";
 
@@ -24,6 +26,7 @@ export interface RawAIExtractUpload {
 
 export interface AIExtractResult {
   readonly extraction: SemanticExtractionResult;
+  readonly validation: ValidationResult;
   readonly report: AIExecutionReport;
 }
 
@@ -33,20 +36,21 @@ export interface IAIExtractService {
 
 /**
  * Diagnostic endpoint for the AI Orchestration Platform: runs Upload -> CSV
- * Parsing -> Normalization -> Semantic Extraction directly through the same
- * stage classes `createPipelineRunner` wires up, so this exercises the real
- * AIOrchestrator + provider + parser + schema validator, not a stub. Stops
- * right after extraction rather than going through `PipelineRunner`, because
- * Validation and Aggregation are still not-yet-implemented placeholder stages
- * (see their READMEs) that would otherwise always halt the run — this module
- * exists specifically so the AI layer is observable over HTTP without
- * waiting on those later volumes.
+ * Parsing -> Normalization -> Semantic Extraction -> Validation directly
+ * through the same stage classes `createPipelineRunner` wires up, so this
+ * exercises the real AIOrchestrator + provider + parser + schema validator +
+ * Trust Layer, not a stub. Stops right after Validation rather than going
+ * through `PipelineRunner`, because Aggregation is still a not-yet-implemented
+ * placeholder stage (see its README) that would otherwise always halt the
+ * run — this module exists specifically so the AI + Trust layers are
+ * observable over HTTP without waiting on that later volume.
  */
 export class AIExtractService implements IAIExtractService {
   private readonly uploadStage = new UploadStage();
   private readonly csvParsingStage = new CsvParsingStage();
   private readonly normalizationStage = new NormalizationStage();
   private readonly semanticExtractionStage: SemanticExtractionStage;
+  private readonly validationStage = new ValidationStage();
 
   constructor(aiConfig: AIConfig = loadAIConfig()) {
     const provider = createProvider(aiConfig);
@@ -92,6 +96,18 @@ export class AIExtractService implements IAIExtractService {
       throw toFileProcessingError("semantic-extraction", extractExecution.result.info);
     }
 
-    return { extraction: extractExecution.result.output, report };
+    const validateExecution = await this.validationStage.execute(
+      extractExecution.result.output,
+      extractExecution.context,
+    );
+    if (!stageSucceeded(validateExecution.result)) {
+      throw toFileProcessingError("validation", validateExecution.result.info);
+    }
+
+    return {
+      extraction: extractExecution.result.output,
+      validation: validateExecution.result.output,
+      report,
+    };
   }
 }

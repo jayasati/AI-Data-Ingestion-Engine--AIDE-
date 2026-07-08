@@ -2,13 +2,27 @@ import type {
   AIExecutionReportDTO,
   AIExtractIssueDTO,
   AIExtractResponse,
+  ClassifiedIssueDTO,
+  DatasetValidationSummaryDTO,
   ExtractedFieldDTO,
   ExtractedRecordDTO,
+  FieldValidationReportDTO,
   PromptExecutionMetadataDTO,
+  RepairActionDTO,
+  ValidatedRecordDTO,
+  ValidationResultDTO,
 } from "@aide/shared-types";
 import type { AIExecutionReport, ParserDiagnostic } from "@/ai/contracts/execution";
 import type { StageIssue } from "@/pipeline/contracts/stage-result";
 import type { ExtractedField, ExtractedRecord } from "@/pipeline/domain/extraction";
+import type {
+  ClassifiedIssue,
+  DatasetValidationSummary,
+  FieldValidationReport,
+  RepairAction,
+  ValidatedRecord,
+  ValidationResult,
+} from "@/pipeline/domain/validation";
 import type { AIExtractResult } from "@/modules/ai/ai-extract.service";
 import type { PromptExecutionMetadata } from "@/prompt";
 
@@ -23,8 +37,52 @@ export function toAIExtractResponse(result: AIExtractResult): AIExtractResponse 
     implemented: true,
     records: result.extraction.records.map(toExtractedRecordDTO),
     recordCount: result.extraction.records.length,
+    validation: toValidationResultDTO(result.validation),
     report: toAIExecutionReportDTO(result.report),
   };
+}
+
+function toValidationResultDTO(validation: ValidationResult): ValidationResultDTO {
+  return {
+    records: validation.records.map(toValidatedRecordDTO),
+    summary: toDatasetValidationSummaryDTO(validation.summary),
+  };
+}
+
+function toValidatedRecordDTO(record: ValidatedRecord): ValidatedRecordDTO {
+  return {
+    rowNumber: record.rowNumber,
+    isValid: record.isValid,
+    confidenceScore: record.confidenceScore,
+    issues: record.issues,
+    approvalStatus: record.approvalStatus,
+    approvalReason: record.approvalReason,
+    qualityScore: record.qualityScore,
+    skipped: record.skipped,
+    skipReason: record.skipReason,
+    repairCount: record.repairCount,
+    repairsApplied: record.repairsApplied.map(toRepairActionDTO),
+    fields: record.fields.map(toFieldValidationReportDTO),
+    classifiedIssues: record.classifiedIssues.map(toClassifiedIssueDTO),
+  };
+}
+
+function toRepairActionDTO(action: RepairAction): RepairActionDTO {
+  return { ...action };
+}
+
+function toFieldValidationReportDTO(report: FieldValidationReport): FieldValidationReportDTO {
+  return { ...report };
+}
+
+function toClassifiedIssueDTO(issue: ClassifiedIssue): ClassifiedIssueDTO {
+  return { ...issue };
+}
+
+function toDatasetValidationSummaryDTO(
+  summary: DatasetValidationSummary,
+): DatasetValidationSummaryDTO {
+  return { ...summary };
 }
 
 function toExtractedRecordDTO(record: ExtractedRecord): ExtractedRecordDTO {
@@ -65,6 +123,7 @@ function toAIExecutionReportDTO(report: AIExecutionReport): AIExecutionReportDTO
     promptMetadata: report.promptMetadata
       ? toPromptExecutionMetadataDTO(report.promptMetadata)
       : null,
+    repairMetadata: { ...report.repairMetadata },
   };
 }
 
