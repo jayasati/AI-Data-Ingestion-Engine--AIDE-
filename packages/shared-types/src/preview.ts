@@ -124,6 +124,72 @@ export interface NormalizationSummaryDTO {
   readonly warnings: readonly PreviewIssue[];
 }
 
+/** The Semantic Intelligence Engine's target vocabulary — see apps/api/src/semantic/types.ts. */
+export type SemanticFieldId =
+  | "name"
+  | "email"
+  | "phone"
+  | "company"
+  | "city"
+  | "state"
+  | "country"
+  | "lead_owner"
+  | "crm_status"
+  | "crm_note"
+  | "data_source"
+  | "possession_time"
+  | "description"
+  | "created_at";
+
+export type DatasetType =
+  | "facebook_leads"
+  | "google_ads"
+  | "real_estate"
+  | "marketing"
+  | "sales"
+  | "crm_export"
+  | "manual_spreadsheet"
+  | "mixed"
+  | "unknown";
+
+/**
+ * Hybrid Mapping Engine's routing decision for one column:
+ * "deterministic" — mapped without AI; "ai_candidate" — AI gets ranked hints;
+ * "ai_required" — AI gets little more than the header; "unknown" — no
+ * candidate field scored above the reporting floor at all.
+ */
+export type ConfidenceTier = "deterministic" | "ai_candidate" | "ai_required" | "unknown";
+
+export interface SemanticFieldCandidateDTO {
+  readonly fieldId: SemanticFieldId;
+  readonly confidence: number;
+}
+
+/** Deterministic, AI-free field-mapping hint for one column — never a final CRM mapping. */
+export interface SemanticColumnMappingDTO {
+  readonly columnIndex: number;
+  readonly header: string;
+  readonly tier: ConfidenceTier;
+  readonly topCandidateField: SemanticFieldId | null;
+  readonly topCandidateConfidence: number;
+  readonly alternateCandidates: readonly SemanticFieldCandidateDTO[];
+}
+
+/** Semantic Intelligence Engine's dataset-level summary, computed right after normalization. */
+export interface SemanticReportDTO {
+  readonly datasetType: DatasetType;
+  readonly datasetTypeConfidence: number;
+  readonly columnsAnalyzed: number;
+  readonly columns: readonly SemanticColumnMappingDTO[];
+  readonly highConfidenceCount: number;
+  readonly mediumConfidenceCount: number;
+  readonly aiRequiredCount: number;
+  readonly unknownCount: number;
+  /** Fraction of columns routed to "deterministic" or "ai_candidate". */
+  readonly semanticCoverage: number;
+  readonly averageConfidence: number;
+}
+
 export interface DatasetPreviewResponse {
   readonly implemented: true;
   readonly previewRowCount: number;
@@ -135,4 +201,5 @@ export interface DatasetPreviewResponse {
   readonly datasetIntelligence: DatasetIntelligenceDTO;
   readonly warnings: readonly PreviewIssue[];
   readonly normalization: NormalizationSummaryDTO;
+  readonly semantics: SemanticReportDTO;
 }
