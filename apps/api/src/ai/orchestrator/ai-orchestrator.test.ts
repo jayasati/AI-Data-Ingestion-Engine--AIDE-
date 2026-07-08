@@ -313,6 +313,46 @@ describe("AIOrchestrator", () => {
     expect(complete).not.toHaveBeenCalled();
   });
 
+  it("recovers a malformed-but-repairable response and reports status success with repairMetadata", async () => {
+    const brokenText =
+      '{"records": [{"row": 1, "fields": {"name": {"value": "John Doe", "sourceHeader": "Full Name"},},}]}';
+    const provider = fakeProvider(async () => fakeResponse(brokenText));
+    const orchestrator = new AIOrchestrator(provider, CONFIG);
+
+    const { extraction, report } = await orchestrator.run({ normalizedDataset: buildDataset() });
+
+    expect(report.status).toBe("success");
+    expect(extraction.records).toHaveLength(1);
+    expect(report.repairMetadata.attempted).toBe(true);
+    expect(report.repairMetadata.succeeded).toBe(true);
+    expect(report.repairMetadata.repairsApplied).toContain("TRAILING_COMMA_REMOVED");
+    expect(report.parserDiagnostics.map((d) => d.code)).toContain("JSON_REPAIRED");
+  });
+
+  it("falls back to parser_error with attempted-but-failed repairMetadata when repair cannot recover the text", async () => {
+    const provider = fakeProvider(async () => fakeResponse("this is not JSON at all, just prose"));
+    const orchestrator = new AIOrchestrator(provider, CONFIG);
+
+    const { report } = await orchestrator.run({ normalizedDataset: buildDataset() });
+
+    expect(report.status).toBe("parser_error");
+    expect(report.repairMetadata.attempted).toBe(true);
+    expect(report.repairMetadata.succeeded).toBe(false);
+  });
+
+  it("reports repairMetadata.attempted false on a clean, already-valid response", async () => {
+    const provider = fakeProvider(async () => fakeResponse(validResponseText()));
+    const orchestrator = new AIOrchestrator(provider, CONFIG);
+
+    const { report } = await orchestrator.run({ normalizedDataset: buildDataset() });
+
+    expect(report.repairMetadata).toEqual({
+      attempted: false,
+      succeeded: false,
+      repairsApplied: [],
+    });
+  });
+
   it("logs via the optional logger without throwing when none is provided", async () => {
     const provider = fakeProvider(async () => fakeResponse(validResponseText()));
     const logger: Logger = {

@@ -5,6 +5,7 @@ import { AIProviderError } from "@/ai/contracts/ai-error";
 import type {
   AIExecutionReport,
   AIExecutionStatus,
+  JsonRepairMetadata,
   ParserDiagnostic,
 } from "@/ai/contracts/execution";
 import type { AIRequest, AIResponse, LLMProvider } from "@/ai/contracts/llm-provider";
@@ -24,6 +25,7 @@ import {
   type CompiledPrompt,
   type PromptExecutionMetadata,
 } from "@/prompt";
+import { attemptJsonRepair, NO_JSON_REPAIR } from "@/trust/parser/json-repair";
 
 export interface OrchestratorRequest {
   readonly normalizedDataset: NormalizedDataset;
@@ -110,17 +112,44 @@ export class AIOrchestrator {
     }
 
     const parsed = parseAIResponse(response.text);
+    let effectiveData: unknown = parsed.data;
+    let effectiveDiagnostics: readonly ParserDiagnostic[] = parsed.diagnostics;
+    let repairMetadata: JsonRepairMetadata = NO_JSON_REPAIR;
+
     if (!parsed.success) {
-      return this.buildParserFailureResult(
+      const repair = attemptJsonRepair(response.text);
+      repairMetadata = {
+        attempted: true,
+        succeeded: repair.success,
+        repairsApplied: repair.repairsApplied,
+      };
+
+      if (!repair.success) {
+        return this.buildParserFailureResult(
+          requestId,
+          startedAt,
+          response,
+          parsed.diagnostics,
+          compiled,
+          repairMetadata,
+        );
+      }
+
+      this.logger?.warn("ai.response.json_repaired", {
         requestId,
-        startedAt,
-        response,
-        parsed.diagnostics,
-        compiled,
-      );
+        repairsApplied: repair.repairsApplied,
+      });
+      effectiveData = repair.data;
+      effectiveDiagnostics = [
+        ...parsed.diagnostics,
+        {
+          code: "JSON_REPAIRED",
+          message: `Recovered malformed JSON via: ${repair.repairsApplied.join(", ")}.`,
+        },
+      ];
     }
 
-    const validation = validateAndMapExtraction(parsed.data);
+    const validation = validateAndMapExtraction(effectiveData);
     const completedAt = new Date();
 
     const report: AIExecutionReport = {
@@ -135,9 +164,10 @@ export class AIOrchestrator {
       tokenUsage: response.usage,
       estimatedCostUsd: estimateCostUsd(response.model, response.usage),
       status: "success",
-      warnings: [...validation.warnings, ...parsed.diagnostics.map(toStageIssue)],
-      parserDiagnostics: parsed.diagnostics,
+      warnings: [...validation.warnings, ...effectiveDiagnostics.map(toStageIssue)],
+      parserDiagnostics: effectiveDiagnostics,
       promptMetadata: compiled.metadata,
+      repairMetadata,
     };
 
     this.logger?.info("ai.request.completed", {
@@ -178,6 +208,7 @@ export class AIOrchestrator {
       warnings: [{ code, message }],
       parserDiagnostics: [],
       promptMetadata: null,
+      repairMetadata: NO_JSON_REPAIR,
     };
 
     return { extraction: { records: [] }, report };
@@ -211,6 +242,7 @@ export class AIOrchestrator {
       warnings: [{ code, message }],
       parserDiagnostics: [],
       promptMetadata: compiled.metadata,
+      repairMetadata: NO_JSON_REPAIR,
     };
 
     return { extraction: { records: [] }, report };
@@ -222,6 +254,7 @@ export class AIOrchestrator {
     response: AIResponse,
     diagnostics: readonly ParserDiagnostic[],
     compiled: CompiledPrompt,
+    repairMetadata: JsonRepairMetadata = NO_JSON_REPAIR,
   ): OrchestratorResult {
     const completedAt = new Date();
     this.logger?.warn("ai.response.parse_failed", { requestId, diagnostics });
@@ -241,6 +274,7 @@ export class AIOrchestrator {
       warnings: diagnostics.map(toStageIssue),
       parserDiagnostics: diagnostics,
       promptMetadata: compiled.metadata,
+      repairMetadata,
     };
 
     return { extraction: { records: [] }, report };
