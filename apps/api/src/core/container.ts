@@ -1,6 +1,7 @@
 import { loadConfig, SERVICE_NAME, type AppConfig } from "@/config";
 import { loadAIConfig } from "@/config/ai-config";
 import { createLogger, type Logger } from "@/core/logger";
+import { loadExecutionConfig } from "@/execution";
 import { AIExtractController } from "@/modules/ai/ai-extract.controller";
 import { AIExtractService } from "@/modules/ai/ai-extract.service";
 import { HealthController } from "@/modules/health/health.controller";
@@ -34,7 +35,9 @@ export function createContainer(): Container {
   const healthController = new HealthController(new HealthService(config));
   const uploadController = new UploadController(new UploadService());
   const previewController = new PreviewController(new PreviewService());
-  const importController = new ImportController(new ImportService());
+  const importController = new ImportController(
+    new ImportService(loadAIConfig(), loadExecutionConfig(), logger),
+  );
   const aiExtractController = new AIExtractController(new AIExtractService(loadAIConfig()));
 
   return {
