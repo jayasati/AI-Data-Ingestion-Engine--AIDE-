@@ -13,10 +13,13 @@
   },
   "dependencies": {
     "@aide/shared-types": "*",
+    "@anthropic-ai/sdk": "^0.32.0",
+    "@google/genai": "^1.0.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "libphonenumber-js": "^1.11.0",
-    "multer": "^2.0.1"
+    "multer": "^2.0.1",
+    "openai": "^4.80.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
