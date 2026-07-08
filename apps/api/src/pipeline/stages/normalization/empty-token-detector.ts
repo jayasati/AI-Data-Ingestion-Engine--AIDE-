@@ -1,6 +1,21 @@
-const EMPTY_TOKENS = new Set(["", "n/a", "na", "-", "--", "null", "none", "unknown"]);
+export const DEFAULT_NULL_ALIASES: ReadonlySet<string> = new Set([
+  "",
+  "n/a",
+  "na",
+  "#n/a",
+  "-",
+  "--",
+  "null",
+  "none",
+  "unknown",
+  "nil",
+  "undefined",
+]);
 
-/** Recognizes the common ways a source system spells "no value" as literal text. */
-export function isEmptyToken(value: string): boolean {
-  return EMPTY_TOKENS.has(value.trim().toLowerCase());
+/** Recognizes the common ways a source system spells "no value" as literal text. Aliases are configurable. */
+export function isEmptyToken(
+  value: string,
+  aliases: ReadonlySet<string> = DEFAULT_NULL_ALIASES,
+): boolean {
+  return aliases.has(value.trim().toLowerCase());
 }
