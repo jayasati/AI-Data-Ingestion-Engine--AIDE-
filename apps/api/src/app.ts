@@ -5,6 +5,7 @@ import { errorHandler } from "@/middleware/error-handler";
 import { notFound } from "@/middleware/not-found";
 import { requestId } from "@/middleware/request-id";
 import { requestLogger } from "@/middleware/request-logger";
+import { createAIExtractRouter } from "@/modules/ai/ai-extract.routes";
 import { createHealthRouter } from "@/modules/health/health.routes";
 import { createImportRouter } from "@/modules/import/import.routes";
 import { createPreviewRouter } from "@/modules/preview/preview.routes";
@@ -29,6 +30,7 @@ export function createApp(container: Container): express.Express {
   app.use("/upload", createUploadRouter(container.uploadController));
   app.use("/preview", createPreviewRouter(container.previewController));
   app.use("/import", createImportRouter(container.importController));
+  app.use("/ai", createAIExtractRouter(container.aiExtractController));
 
   app.use(notFound);
   app.use(errorHandler(logger));

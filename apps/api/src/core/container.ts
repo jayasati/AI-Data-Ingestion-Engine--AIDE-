@@ -1,5 +1,8 @@
 import { loadConfig, SERVICE_NAME, type AppConfig } from "@/config";
+import { loadAIConfig } from "@/config/ai-config";
 import { createLogger, type Logger } from "@/core/logger";
+import { AIExtractController } from "@/modules/ai/ai-extract.controller";
+import { AIExtractService } from "@/modules/ai/ai-extract.service";
 import { HealthController } from "@/modules/health/health.controller";
 import { HealthService } from "@/modules/health/health.service";
 import { ImportController } from "@/modules/import/import.controller";
@@ -16,6 +19,7 @@ export interface Container {
   uploadController: UploadController;
   previewController: PreviewController;
   importController: ImportController;
+  aiExtractController: AIExtractController;
 }
 
 /**
@@ -31,6 +35,7 @@ export function createContainer(): Container {
   const uploadController = new UploadController(new UploadService());
   const previewController = new PreviewController(new PreviewService());
   const importController = new ImportController(new ImportService());
+  const aiExtractController = new AIExtractController(new AIExtractService(loadAIConfig()));
 
   return {
     config,
@@ -39,5 +44,6 @@ export function createContainer(): Container {
     uploadController,
     previewController,
     importController,
+    aiExtractController,
   };
 }

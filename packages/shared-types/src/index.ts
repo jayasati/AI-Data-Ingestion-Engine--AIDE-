@@ -9,3 +9,4 @@ export * from "./upload";
 export * from "./import";
 export * from "./health";
 export * from "./preview";
+export * from "./ai-extract";
