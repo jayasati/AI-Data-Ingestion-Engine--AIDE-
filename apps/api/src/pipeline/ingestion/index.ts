@@ -35,3 +35,8 @@ export {
   analyzeCsvIngestion,
   type CsvIngestionAnalysisInput,
 } from "@/pipeline/ingestion/csv-ingestion-analyzer";
+export {
+  buildNormalizationSummary,
+  type NormalizationSummary,
+  type NormalizationFieldIssue,
+} from "@/pipeline/ingestion/normalization-summary";

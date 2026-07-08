@@ -16,7 +16,7 @@ export class PreviewController {
     }
 
     const decoded = decodeUploadBuffer(req.file.buffer);
-    const preview = await this.previewService.previewUpload({
+    const result = await this.previewService.previewUpload({
       fileName: req.file.originalname,
       mimeType: req.file.mimetype,
       declaredSizeBytes: req.file.size,
@@ -26,6 +26,6 @@ export class PreviewController {
 
     res
       .status(200)
-      .json(buildSuccess(req.requestId, toPreviewResponse(preview), requestMetadata(req)));
+      .json(buildSuccess(req.requestId, toPreviewResponse(result), requestMetadata(req)));
   };
 }

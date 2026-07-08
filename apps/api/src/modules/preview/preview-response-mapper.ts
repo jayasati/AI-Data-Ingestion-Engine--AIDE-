@@ -5,17 +5,24 @@ import type {
   DatasetMetadataDTO,
   DatasetPreviewResponse,
   HeaderProfileDTO,
+  NormalizationFieldIssueDTO,
+  NormalizationReportDTO,
+  NormalizationSummaryDTO,
   PreviewIssue,
   PreviewRowDTO,
 } from "@aide/shared-types";
-import type { DatasetPreview } from "@/pipeline";
+import type { DatasetPreview, NormalizationSummary } from "@/pipeline";
+import type { StageIssue } from "@/pipeline/contracts/stage-result";
+import type { PreviewResult } from "@/modules/preview/preview.service";
 
 /**
- * Translates the internal pipeline's `DatasetPreview` into the wire-contract
- * DTOs published by `@aide/shared-types`, so the frontend never depends on
+ * Translates the internal pipeline's `PreviewResult` (CSV Ingestion Engine
+ * analysis + Normalization Engine summary) into the wire-contract DTOs
+ * published by `@aide/shared-types`, so the frontend never depends on
  * apps/api's internal module structure.
  */
-export function toPreviewResponse(preview: DatasetPreview): DatasetPreviewResponse {
+export function toPreviewResponse(result: PreviewResult): DatasetPreviewResponse {
+  const { preview } = result;
   return {
     implemented: true,
     previewRowCount: preview.previewRowCount,
@@ -26,6 +33,7 @@ export function toPreviewResponse(preview: DatasetPreview): DatasetPreviewRespon
     columnProfiles: preview.columnProfiles.map(toColumnProfileDTO),
     datasetIntelligence: toDatasetIntelligenceDTO(preview.datasetIntelligence),
     warnings: preview.warnings.map(toIssue),
+    normalization: toNormalizationSummaryDTO(result.normalization, result.normalizationWarnings),
   };
 }
 
@@ -73,4 +81,27 @@ function toDatasetIntelligenceDTO(
 
 function toColumnHintDTO(hint: ColumnHintDTO): ColumnHintDTO {
   return { ...hint };
+}
+
+function toNormalizationReportDTO(report: NormalizationSummary["report"]): NormalizationReportDTO {
+  return { ...report };
+}
+
+function toNormalizationFieldIssueDTO(
+  issue: NormalizationSummary["fieldIssues"][number],
+): NormalizationFieldIssueDTO {
+  return { ...issue };
+}
+
+function toNormalizationSummaryDTO(
+  summary: NormalizationSummary,
+  warnings: readonly StageIssue[],
+): NormalizationSummaryDTO {
+  return {
+    report: toNormalizationReportDTO(summary.report),
+    healthScore: summary.healthScore,
+    fieldIssues: summary.fieldIssues.map(toNormalizationFieldIssueDTO),
+    totalIssueCount: summary.totalIssueCount,
+    warnings: warnings.map(toIssue),
+  };
 }

@@ -1,13 +1,17 @@
 import { randomUUID } from "node:crypto";
 import {
   analyzeCsvIngestion,
+  buildNormalizationSummary,
   CsvParsingStage,
   DEFAULT_PIPELINE_CONFIGURATION,
+  NormalizationStage,
   PipelineContext,
   stageSucceeded,
   UploadStage,
   type DatasetPreview,
+  type NormalizationSummary,
 } from "@/pipeline";
+import type { StageIssue } from "@/pipeline/contracts/stage-result";
 import { toFileProcessingError } from "@/modules/preview/stage-failure";
 
 export interface RawPreviewUpload {
@@ -18,23 +22,34 @@ export interface RawPreviewUpload {
   readonly detectedEncoding: string;
 }
 
+export interface PreviewResult {
+  readonly preview: DatasetPreview;
+  readonly normalization: NormalizationSummary;
+  /** Stage-level aggregate warnings (e.g. "3 phone field(s) had no determinable country code"). */
+  readonly normalizationWarnings: readonly StageIssue[];
+}
+
 export interface IPreviewService {
-  previewUpload(upload: RawPreviewUpload): Promise<DatasetPreview>;
+  previewUpload(upload: RawPreviewUpload): Promise<PreviewResult>;
 }
 
 /**
- * Real implementation: reuses Volume 2's UploadStage and CsvParsingStage
- * exactly as the future full import pipeline will, then runs the CSV
- * Ingestion Engine's analysis layer over the result. Deliberately does not
- * run Normalization or anything past it — preview must stay AI-free and
- * side-effect-free, showing the file as parsed, not as it will eventually
- * be imported.
+ * Real implementation: reuses Volume 2's UploadStage, CsvParsingStage, and
+ * (as of this volume) NormalizationStage directly — the same classes the
+ * future full import pipeline will use — then runs the CSV Ingestion
+ * Engine's analysis layer and the Normalization Engine's summary builder
+ * over the results. Deliberately stops before Semantic Extraction: preview
+ * must stay AI-free, but normalization is a pure deterministic transform
+ * with no side effects, so surfacing its results here (rather than only at
+ * import time) gives the user a trustworthy preview of what import will do
+ * to their data before they commit to it.
  */
 export class PreviewService implements IPreviewService {
   private readonly uploadStage = new UploadStage();
   private readonly csvParsingStage = new CsvParsingStage();
+  private readonly normalizationStage = new NormalizationStage();
 
-  async previewUpload(upload: RawPreviewUpload): Promise<DatasetPreview> {
+  async previewUpload(upload: RawPreviewUpload): Promise<PreviewResult> {
     const context = PipelineContext.create(randomUUID(), DEFAULT_PIPELINE_CONFIGURATION);
 
     const uploadExecution = await this.uploadStage.execute(
@@ -61,10 +76,27 @@ export class PreviewService implements IPreviewService {
       throw toFileProcessingError("csv-parsing", parseExecution.result.info);
     }
 
-    return analyzeCsvIngestion({
+    const normalizeExecution = await this.normalizationStage.execute(
+      parseExecution.result.output,
+      parseExecution.context,
+    );
+
+    if (!stageSucceeded(normalizeExecution.result)) {
+      throw toFileProcessingError("normalization", normalizeExecution.result.info);
+    }
+
+    const preview = analyzeCsvIngestion({
       dataset: parseExecution.result.output,
       uploadedFile: uploadExecution.result.output.uploadedFile,
       parserStageInfo: parseExecution.result.info,
     });
+
+    const normalization = buildNormalizationSummary(normalizeExecution.result.output);
+
+    return {
+      preview,
+      normalization,
+      normalizationWarnings: normalizeExecution.result.info.warnings,
+    };
   }
 }

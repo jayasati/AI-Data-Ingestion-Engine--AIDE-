@@ -84,6 +84,46 @@ export interface PreviewRowDTO {
   readonly warnings: readonly PreviewIssue[];
 }
 
+/** Dataset-level tally from the Normalization Engine's rule pipeline. */
+export interface NormalizationReportDTO {
+  readonly totalFields: number;
+  readonly whitespaceNormalizedCount: number;
+  readonly unicodeNormalizedCount: number;
+  readonly nullValuesDetected: number;
+  readonly emailsNormalized: number;
+  readonly invalidEmails: number;
+  readonly phonesNormalized: number;
+  readonly invalidPhones: number;
+  readonly datesParsed: number;
+  readonly failedDateParses: number;
+  readonly numbersNormalized: number;
+  readonly booleansNormalized: number;
+  readonly fieldsWithWarnings: number;
+  readonly fieldsFailed: number;
+}
+
+export interface NormalizationFieldIssueDTO {
+  readonly rowNumber: number;
+  readonly header: string;
+  readonly message: string;
+  readonly status: "warning" | "failed";
+}
+
+/**
+ * Preview-facing normalization summary — counts, a 0-100 health score, and a
+ * capped list of human-readable field issues. Deliberately excludes rule ids
+ * and per-rule structured detail (email/phone/date/number/boolean payloads):
+ * those are internal to the engine, not part of the published contract.
+ */
+export interface NormalizationSummaryDTO {
+  readonly report: NormalizationReportDTO;
+  readonly healthScore: number;
+  readonly fieldIssues: readonly NormalizationFieldIssueDTO[];
+  /** May exceed fieldIssues.length if the list was capped. */
+  readonly totalIssueCount: number;
+  readonly warnings: readonly PreviewIssue[];
+}
+
 export interface DatasetPreviewResponse {
   readonly implemented: true;
   readonly previewRowCount: number;
@@ -94,4 +134,5 @@ export interface DatasetPreviewResponse {
   readonly columnProfiles: readonly ColumnProfileDTO[];
   readonly datasetIntelligence: DatasetIntelligenceDTO;
   readonly warnings: readonly PreviewIssue[];
+  readonly normalization: NormalizationSummaryDTO;
 }
