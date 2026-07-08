@@ -1,20 +1,26 @@
 "use client";
 
-import { useState } from "react";
-import type { AIExtractResponse, DatasetPreviewResponse } from "@aide/shared-types";
+import { useEffect, useState } from "react";
+import {
+  ImportStatus,
+  type AIExtractResponse,
+  type DatasetPreviewResponse,
+  type ResultSummary,
+} from "@aide/shared-types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/providers/toast-provider";
 import { ApiClientError } from "@/services/api-client";
 import { submitAIExtract } from "@/services/ai-extract-client";
+import { fetchImportResult, submitImport } from "@/services/import-client";
 import { submitPreview } from "@/services/preview-client";
 import { AIExtractionSummary } from "@/features/import/ai-extraction-summary";
+import { ImportProgress } from "@/features/import/import-progress";
+import { ImportResultSummary } from "@/features/import/import-result-summary";
 import { ImportStepper, type ImportStepId } from "@/features/import/import-stepper";
 import { UploadArea } from "@/features/import/upload-area";
 import { PreviewPlaceholder } from "@/features/import/preview-placeholder";
 import { PreviewResults } from "@/features/import/preview-results";
-import { ProgressPlaceholder } from "@/features/import/progress-placeholder";
-import { ResultPlaceholder } from "@/features/import/result-placeholder";
 
 type ImportPhase = "idle" | "uploading" | "preview-ready" | "error";
 type AIExtractPhase = "idle" | "loading" | "ready" | "error";
@@ -26,7 +32,15 @@ const STEP_FOR_PHASE: Record<ImportPhase, ImportStepId> = {
   error: "upload",
 };
 
-/** Owns the Upload → Preview state for this volume; Validation/Results stay placeholders. */
+const TERMINAL_STATUSES: ReadonlySet<ImportStatus> = new Set([
+  ImportStatus.Completed,
+  ImportStatus.Failed,
+  ImportStatus.Cancelled,
+]);
+
+const POLL_INTERVAL_MS = 1000;
+
+/** Owns the Upload -> Preview -> Full Import state for this volume. */
 export function ImportWorkflow() {
   const [phase, setPhase] = useState<ImportPhase>("idle");
   const [fileName, setFileName] = useState<string | null>(null);
@@ -36,7 +50,48 @@ export function ImportWorkflow() {
   const [aiExtractPhase, setAIExtractPhase] = useState<AIExtractPhase>("idle");
   const [aiExtractResult, setAIExtractResult] = useState<AIExtractResponse | null>(null);
   const [aiExtractError, setAIExtractError] = useState<string | null>(null);
+  const [importId, setImportId] = useState<string | null>(null);
+  const [importSummary, setImportSummary] = useState<ResultSummary | null>(null);
+  const [isStartingImport, setIsStartingImport] = useState(false);
   const { toast } = useToast();
+
+  // Polls GET /import/:id every second while the import is still running —
+  // no SSE/WebSocket infrastructure exists yet, and the Execution Platform's
+  // own scope explicitly excludes standing up an external event bus this
+  // volume, so polling is the simplest thing that's actually correct.
+  useEffect(() => {
+    if (!importId) {
+      return;
+    }
+    let cancelled = false;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
+    const poll = async () => {
+      try {
+        const summary = await fetchImportResult(importId);
+        if (cancelled) return;
+        setImportSummary(summary);
+        if (TERMINAL_STATUSES.has(summary.status) && intervalId !== null) {
+          clearInterval(intervalId);
+        }
+      } catch (error) {
+        if (cancelled) return;
+        const message =
+          error instanceof ApiClientError ? error.message : "Lost contact with the import.";
+        toast({ title: "Import status unavailable", description: message, variant: "error" });
+      }
+    };
+
+    void poll();
+    intervalId = setInterval(() => void poll(), POLL_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      if (intervalId !== null) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [importId, toast]);
 
   const handleFileSelected = async (file: File) => {
     setPhase("uploading");
@@ -46,6 +101,8 @@ export function ImportWorkflow() {
     setAIExtractPhase("idle");
     setAIExtractResult(null);
     setAIExtractError(null);
+    setImportId(null);
+    setImportSummary(null);
 
     try {
       const result = await submitPreview(file);
@@ -81,6 +138,25 @@ export function ImportWorkflow() {
       setAIExtractResult(null);
       setAIExtractPhase("error");
       toast({ title: "AI extraction failed", description: message, variant: "error" });
+    }
+  };
+
+  const handleRunFullImport = async () => {
+    if (!selectedFile) return;
+    setIsStartingImport(true);
+    setImportSummary(null);
+
+    try {
+      const accepted = await submitImport(selectedFile);
+      setImportId(accepted.importId);
+    } catch (error) {
+      const message =
+        error instanceof ApiClientError
+          ? error.message
+          : "Something went wrong starting the import.";
+      toast({ title: "Import failed to start", description: message, variant: "error" });
+    } finally {
+      setIsStartingImport(false);
     }
   };
 
@@ -122,6 +198,28 @@ export function ImportWorkflow() {
           {aiExtractPhase === "ready" && aiExtractResult ? (
             <AIExtractionSummary result={aiExtractResult} />
           ) : null}
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Full Import</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Run the whole file through the Execution Platform — batched, concurrent workers,
+                Trust Layer validation, and a final aggregated result.
+              </p>
+              <Button
+                onClick={handleRunFullImport}
+                isLoading={isStartingImport}
+                disabled={
+                  isStartingImport ||
+                  (importSummary !== null && !TERMINAL_STATUSES.has(importSummary.status))
+                }
+              >
+                Run Full Import
+              </Button>
+            </CardContent>
+          </Card>
         </>
       ) : phase === "error" ? (
         <Card>
@@ -145,8 +243,8 @@ export function ImportWorkflow() {
         <PreviewPlaceholder />
       )}
 
-      <ProgressPlaceholder />
-      <ResultPlaceholder />
+      <ImportProgress summary={importSummary} />
+      <ImportResultSummary summary={importSummary} />
     </>
   );
 }
