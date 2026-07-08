@@ -4,6 +4,7 @@ import { Badge, type BadgeVariant } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, type TableColumn } from "@/components/ui/table";
 import { NormalizationSummary } from "@/features/import/normalization-summary";
+import { SemanticSummary } from "@/features/import/semantic-summary";
 
 const DELIMITER_LABELS: Record<string, string> = {
   ",": "Comma",
@@ -62,6 +63,7 @@ export function PreviewResults({ preview }: { preview: DatasetPreviewResponse })
     previewRowCount,
     totalRowCount,
     normalization,
+    semantics,
   } = preview;
 
   const tableColumns: TableColumn<PreviewRowDTO>[] = [
@@ -169,6 +171,8 @@ export function PreviewResults({ preview }: { preview: DatasetPreviewResponse })
       </Card>
 
       <WarningsPanel warnings={warnings} />
+
+      <SemanticSummary semantics={semantics} />
 
       <NormalizationSummary normalization={normalization} />
     </div>
