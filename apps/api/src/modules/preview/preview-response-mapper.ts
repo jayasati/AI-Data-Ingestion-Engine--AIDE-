@@ -10,10 +10,13 @@ import type {
   NormalizationSummaryDTO,
   PreviewIssue,
   PreviewRowDTO,
+  SemanticColumnMappingDTO,
+  SemanticReportDTO,
 } from "@aide/shared-types";
 import type { DatasetPreview, NormalizationSummary } from "@/pipeline";
 import type { StageIssue } from "@/pipeline/contracts/stage-result";
 import type { PreviewResult } from "@/modules/preview/preview.service";
+import type { SemanticAnalysisResult } from "@/semantic/semantic-engine";
 
 /**
  * Translates the internal pipeline's `PreviewResult` (CSV Ingestion Engine
@@ -34,6 +37,7 @@ export function toPreviewResponse(result: PreviewResult): DatasetPreviewResponse
     datasetIntelligence: toDatasetIntelligenceDTO(preview.datasetIntelligence),
     warnings: preview.warnings.map(toIssue),
     normalization: toNormalizationSummaryDTO(result.normalization, result.normalizationWarnings),
+    semantics: toSemanticReportDTO(result.semantics),
   };
 }
 
@@ -103,5 +107,38 @@ function toNormalizationSummaryDTO(
     fieldIssues: summary.fieldIssues.map(toNormalizationFieldIssueDTO),
     totalIssueCount: summary.totalIssueCount,
     warnings: warnings.map(toIssue),
+  };
+}
+
+function toSemanticReportDTO(semantics: SemanticAnalysisResult): SemanticReportDTO {
+  const { report } = semantics;
+  return {
+    datasetType: report.datasetType,
+    datasetTypeConfidence: report.datasetTypeConfidence,
+    columnsAnalyzed: report.columnsAnalyzed,
+    columns: semantics.mappings.map(toSemanticColumnMappingDTO),
+    highConfidenceCount: report.highConfidenceFields.length,
+    mediumConfidenceCount: report.mediumConfidenceFields.length,
+    aiRequiredCount: report.aiRequiredFields.length,
+    unknownCount: report.unknownColumns.length,
+    semanticCoverage: report.semanticCoverage,
+    averageConfidence: report.averageConfidence,
+  };
+}
+
+function toSemanticColumnMappingDTO(
+  mapping: SemanticAnalysisResult["mappings"][number],
+): SemanticColumnMappingDTO {
+  const [, ...alternates] = mapping.candidates;
+  return {
+    columnIndex: mapping.columnIndex,
+    header: mapping.header,
+    tier: mapping.tier,
+    topCandidateField: mapping.topCandidate?.fieldId ?? null,
+    topCandidateConfidence: mapping.topCandidate?.confidence ?? 0,
+    alternateCandidates: alternates.map((candidate) => ({
+      fieldId: candidate.fieldId,
+      confidence: candidate.confidence,
+    })),
   };
 }

@@ -203,6 +203,71 @@ describe("AIOrchestrator", () => {
     expect(captured!.timeoutMs).toBe(CONFIG.timeoutMs);
   });
 
+  it("enriches the compiled prompt with Semantic Intelligence hints when no datasetContext is supplied", async () => {
+    let captured: AIRequest | null = null;
+    const provider = fakeProvider(async (request) => {
+      captured = request;
+      return fakeResponse(validResponseText());
+    });
+    const dataset: NormalizedDataset = {
+      headers: ["Zzyzx Qwerty"],
+      records: [
+        { rowNumber: 1, fields: [field("Zzyzx Qwerty", "xk92j")], warnings: [], hasErrors: false },
+        { rowNumber: 2, fields: [field("Zzyzx Qwerty", "9f2a1")], warnings: [], hasErrors: false },
+      ],
+      recordCount: 2,
+      report: EMPTY_REPORT,
+    };
+
+    const orchestrator = new AIOrchestrator(provider, CONFIG);
+    await orchestrator.run({ normalizedDataset: dataset });
+
+    const userMessage = captured!.messages.find((m) => m.role === "user")!.content;
+    expect(userMessage).toContain("Detected dataset type");
+    expect(userMessage).toContain('"Zzyzx Qwerty": no confident guess');
+  });
+
+  it("skips a header's semantic hint once it is confident enough to map deterministically", async () => {
+    let captured: AIRequest | null = null;
+    const provider = fakeProvider(async (request) => {
+      captured = request;
+      return fakeResponse(validResponseText());
+    });
+    const dataset: NormalizedDataset = {
+      headers: ["Contact"],
+      records: [
+        { rowNumber: 1, fields: [field("Contact", "9876543210")], warnings: [], hasErrors: false },
+        { rowNumber: 2, fields: [field("Contact", "9988776655")], warnings: [], hasErrors: false },
+        { rowNumber: 3, fields: [field("Contact", "9123456780")], warnings: [], hasErrors: false },
+      ],
+      recordCount: 3,
+      report: EMPTY_REPORT,
+    };
+
+    const orchestrator = new AIOrchestrator(provider, CONFIG);
+    await orchestrator.run({ normalizedDataset: dataset });
+
+    const userMessage = captured!.messages.find((m) => m.role === "user")!.content;
+    expect(userMessage).toContain("Detected dataset type");
+    expect(userMessage).not.toContain("Semantic field hints");
+  });
+
+  it("skips Semantic Intelligence analysis when the caller already supplied a datasetContext", async () => {
+    let captured: AIRequest | null = null;
+    const provider = fakeProvider(async (request) => {
+      captured = request;
+      return fakeResponse(validResponseText());
+    });
+    const orchestrator = new AIOrchestrator(provider, CONFIG);
+    await orchestrator.run({
+      normalizedDataset: buildDataset(),
+      datasetContext: { totalRecords: 0, headers: [], columns: [] },
+    });
+
+    const userMessage = captured!.messages.find((m) => m.role === "user")!.content;
+    expect(userMessage).not.toContain("Detected dataset type");
+  });
+
   it("logs via the optional logger without throwing when none is provided", async () => {
     const provider = fakeProvider(async () => fakeResponse(validResponseText()));
     const logger: Logger = {

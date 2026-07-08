@@ -1,4 +1,5 @@
 import type { NormalizedDataset } from "@/pipeline/domain/normalization";
+import type { SemanticDatasetContext } from "@/semantic/context/semantic-context-builder";
 
 export interface ColumnContextSummary {
   readonly header: string;
@@ -12,6 +13,13 @@ export interface DatasetContext {
   readonly totalRecords: number;
   readonly headers: readonly string[];
   readonly columns: readonly ColumnContextSummary[];
+  /**
+   * Optional Semantic Intelligence Engine output (Volume 6) — undefined when
+   * the caller doesn't supply one, so every existing caller/test keeps
+   * working unchanged. When present, prompt-sections.ts injects it as extra
+   * dataset-context guidance instead of leaving the AI to rediscover it.
+   */
+  readonly semantics?: SemanticDatasetContext;
 }
 
 const SAMPLE_VALUE_LIMIT = 5;
@@ -23,7 +31,10 @@ const SAMPLE_VALUE_LIMIT = 5;
  * just rolls that up per column so the prompt can say "column 'Contact'
  * looks like phone numbers" instead of the AI guessing from raw text alone.
  */
-export function buildDatasetContext(dataset: NormalizedDataset): DatasetContext {
+export function buildDatasetContext(
+  dataset: NormalizedDataset,
+  semantics?: SemanticDatasetContext,
+): DatasetContext {
   const columns = dataset.headers.map((header, columnIndex) =>
     buildColumnSummary(header, columnIndex, dataset),
   );
@@ -32,6 +43,7 @@ export function buildDatasetContext(dataset: NormalizedDataset): DatasetContext 
     totalRecords: dataset.recordCount,
     headers: dataset.headers,
     columns,
+    semantics,
   };
 }
 

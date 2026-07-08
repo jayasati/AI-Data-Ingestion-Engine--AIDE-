@@ -56,14 +56,62 @@ export function buildDatasetContextSection(context: DatasetContext): string {
     return `  - "${column.header}"${typeHint}${samples}, ${nullPercent}% empty`;
   });
 
-  return [
+  const lines = [
     "# Dataset Context",
     `${context.totalRecords} record(s) total. Detected columns:`,
     ...columnLines,
     "",
     "These type hints come from deterministic normalization, not from you — treat them",
     "as guidance, not certainty.",
-  ].join("\n");
+  ];
+
+  if (context.semantics) {
+    lines.push(...buildSemanticIntelligenceLines(context.semantics));
+  }
+
+  return lines.join("\n");
+}
+
+/**
+ * Dynamic Context Injection (Chapter 12, Task 12.8): instead of letting the
+ * AI rediscover which column probably means what, hand it the Semantic
+ * Intelligence Engine's own ranked candidates. Deliberately skips
+ * "deterministic"-tier columns — those never needed AI attention, so
+ * spending tokens re-litigating them here would be pure waste.
+ */
+function buildSemanticIntelligenceLines(
+  semantics: NonNullable<DatasetContext["semantics"]>,
+): string[] {
+  const lines = [
+    "",
+    `Detected dataset type: ${semantics.datasetType} (${Math.round(semantics.datasetTypeConfidence * 100)}% confidence).`,
+  ];
+
+  const needsAiAttention = semantics.columns.filter((column) => column.tier !== "deterministic");
+  if (needsAiAttention.length === 0) {
+    return lines;
+  }
+
+  lines.push(
+    "Semantic field hints from deterministic analysis (not certainty — verify against the actual row data):",
+  );
+  for (const column of needsAiAttention) {
+    if (!column.topCandidateField) {
+      lines.push(`  - "${column.header}": no confident guess, decide from the data alone.`);
+      continue;
+    }
+    const alternates =
+      column.alternateCandidates.length > 0
+        ? `; also consider: ${column.alternateCandidates
+            .map((alt) => `${alt.fieldId} (${Math.round(alt.confidence * 100)}%)`)
+            .join(", ")}`
+        : "";
+    lines.push(
+      `  - "${column.header}": likely "${column.topCandidateField}" (${Math.round(column.topCandidateConfidence * 100)}%)${alternates}`,
+    );
+  }
+
+  return lines;
 }
 
 export function buildExamplesSection(examples: readonly FewShotExample[]): string {

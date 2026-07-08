@@ -13,6 +13,7 @@ import {
 } from "@/pipeline";
 import type { StageIssue } from "@/pipeline/contracts/stage-result";
 import { toFileProcessingError } from "@/modules/preview/stage-failure";
+import { analyzeSemantics, type SemanticAnalysisResult } from "@/semantic/semantic-engine";
 
 export interface RawPreviewUpload {
   readonly fileName: string;
@@ -27,6 +28,7 @@ export interface PreviewResult {
   readonly normalization: NormalizationSummary;
   /** Stage-level aggregate warnings (e.g. "3 phone field(s) had no determinable country code"). */
   readonly normalizationWarnings: readonly StageIssue[];
+  readonly semantics: SemanticAnalysisResult;
 }
 
 export interface IPreviewService {
@@ -37,12 +39,13 @@ export interface IPreviewService {
  * Real implementation: reuses Volume 2's UploadStage, CsvParsingStage, and
  * (as of this volume) NormalizationStage directly — the same classes the
  * future full import pipeline will use — then runs the CSV Ingestion
- * Engine's analysis layer and the Normalization Engine's summary builder
- * over the results. Deliberately stops before Semantic Extraction: preview
- * must stay AI-free, but normalization is a pure deterministic transform
- * with no side effects, so surfacing its results here (rather than only at
- * import time) gives the user a trustworthy preview of what import will do
- * to their data before they commit to it.
+ * Engine's analysis layer, the Normalization Engine's summary builder, and
+ * the Semantic Intelligence Engine over the results. Deliberately stops
+ * before Semantic Extraction (the AI call itself): preview must stay
+ * AI-free, but both normalization and semantic analysis are pure
+ * deterministic transforms with no side effects, so surfacing their results
+ * here (rather than only at import time) gives the user a trustworthy
+ * preview of what import will do to their data before they commit to it.
  */
 export class PreviewService implements IPreviewService {
   private readonly uploadStage = new UploadStage();
@@ -92,11 +95,13 @@ export class PreviewService implements IPreviewService {
     });
 
     const normalization = buildNormalizationSummary(normalizeExecution.result.output);
+    const semantics = analyzeSemantics(normalizeExecution.result.output);
 
     return {
       preview,
       normalization,
       normalizationWarnings: normalizeExecution.result.info.warnings,
+      semantics,
     };
   }
 }

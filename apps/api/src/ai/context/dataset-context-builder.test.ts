@@ -168,4 +168,31 @@ describe("buildDatasetContext", () => {
     expect(context.columns[0].nullRatio).toBe(0);
     expect(context.columns[0].sampleValues).toHaveLength(0);
   });
+
+  it("leaves semantics undefined when no semantic context is supplied", () => {
+    const dataset: NormalizedDataset = {
+      headers: ["Email"],
+      records: [record(1, [field("Email", "john@example.com", "email")])],
+      recordCount: 1,
+      report: EMPTY_REPORT,
+    };
+
+    expect(buildDatasetContext(dataset).semantics).toBeUndefined();
+  });
+
+  it("carries an explicitly supplied semantic context through unchanged", () => {
+    const dataset: NormalizedDataset = {
+      headers: ["Email"],
+      records: [record(1, [field("Email", "john@example.com", "email")])],
+      recordCount: 1,
+      report: EMPTY_REPORT,
+    };
+    const semantics = {
+      datasetType: "crm_export" as const,
+      datasetTypeConfidence: 0.8,
+      columns: [],
+    };
+
+    expect(buildDatasetContext(dataset, semantics).semantics).toBe(semantics);
+  });
 });

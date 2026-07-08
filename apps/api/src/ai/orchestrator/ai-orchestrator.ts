@@ -16,6 +16,8 @@ import { OUTPUT_SCHEMA_VERSION } from "@/ai/schema/crm-output-schema";
 import type { StageIssue } from "@/pipeline/contracts/stage-result";
 import type { SemanticExtractionResult } from "@/pipeline/domain/extraction";
 import type { NormalizedDataset } from "@/pipeline/domain/normalization";
+import { buildSemanticContext } from "@/semantic/context/semantic-context-builder";
+import { analyzeSemantics } from "@/semantic/semantic-engine";
 
 export interface OrchestratorRequest {
   readonly normalizedDataset: NormalizedDataset;
@@ -49,7 +51,12 @@ export class AIOrchestrator {
   async run(request: OrchestratorRequest): Promise<OrchestratorResult> {
     const requestId = randomUUID();
     const startedAt = new Date();
-    const datasetContext = request.datasetContext ?? buildDatasetContext(request.normalizedDataset);
+    const datasetContext =
+      request.datasetContext ??
+      buildDatasetContext(
+        request.normalizedDataset,
+        buildSemanticContext(analyzeSemantics(request.normalizedDataset)),
+      );
 
     const compiled = compilePrompt({
       datasetContext,
