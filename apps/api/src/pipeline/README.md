@@ -6,12 +6,15 @@ result. It is pure TypeScript — no Express, no HTTP, no UI — so every piece
 is constructible and testable on its own.
 
 Volume 1 built the surrounding application (Express app, modules, DI
-container). Volume 2 (this one) builds the pipeline itself: domain models,
-stage contracts, the context that flows through every stage, the import
-lifecycle state machine, an internal event system, and the runner that ties
-it all together. Only the first three stages (Upload, CSV Parsing,
-Normalization) have real logic — the rest are typed placeholders that fail
-loudly and deliberately until later volumes replace them.
+container). Volume 2 built the pipeline itself: domain models, stage
+contracts, the context that flows through every stage, the import lifecycle
+state machine, an internal event system, and the runner that ties it all
+together. Volume 5 replaced the Semantic Extraction placeholder with a real,
+multi-provider AI Orchestration Platform (`apps/api/src/ai/` — see its own
+README). Four of the six stages (Upload, CSV Parsing, Normalization,
+Semantic Extraction) now have real logic; Validation and Aggregation remain
+typed placeholders that fail loudly and deliberately until later volumes
+replace them.
 
 ## Design principles
 
@@ -49,7 +52,8 @@ pipeline/
                                  header disambiguation, ragged-row recovery
     normalization/               real: whitespace, empty-token, Unicode/encoding
                                  cleanup — structural only, never semantic
-    semantic-extraction/         placeholder — AI core volume
+    semantic-extraction/         real: delegates to an injected AIOrchestrator
+                                 (apps/api/src/ai/) — provider-agnostic, see its README
     validation/                   placeholder — validation & trust engine volume
     aggregation/                   placeholder — statistics/aggregation volume
     shared/                       stage-result-factory (timing + StageResult builder)
@@ -68,7 +72,7 @@ sequenceDiagram
     participant Upload as UploadStage
     participant Parse as CsvParsingStage
     participant Normalize as NormalizationStage
-    participant Extract as SemanticExtractionStage (placeholder)
+    participant Extract as SemanticExtractionStage (real — AIOrchestrator)
     participant Validate as ValidationStage (placeholder)
     participant Aggregate as AggregationStage (placeholder)
     participant Bus as PipelineEventBus
@@ -98,17 +102,32 @@ sequenceDiagram
 
     Runner->>Runner: context.transitionTo(AI_PROCESSING)
     Runner->>Extract: execute(normalizedDataset, context)
-    Extract-->>Runner: fatal_failure (STAGE_NOT_IMPLEMENTED)
-    Runner->>Runner: context.transitionTo(FAILED)
-    Runner-->>Bus: PipelineFailed
-    Runner-->>Caller: PipelineRunResult (halted at semantic-extraction)
+    Extract->>Extract: AIOrchestrator.run({ normalizedDataset })
+    alt AI call succeeds
+        Extract-->>Runner: success/warning (SemanticExtractionResult)
+        Runner->>Validate: execute(extractionResult, context)
+        Validate-->>Runner: fatal_failure (STAGE_NOT_IMPLEMENTED)
+        Runner->>Runner: context.transitionTo(FAILED)
+        Runner-->>Bus: PipelineFailed
+        Runner-->>Caller: PipelineRunResult (halted at validation)
+    else AI call fails (provider_error / parser_error / timeout)
+        Extract-->>Runner: fatal_failure
+        Runner->>Runner: context.transitionTo(FAILED)
+        Runner-->>Bus: PipelineFailed
+        Runner-->>Caller: PipelineRunResult (halted at semantic-extraction)
+    end
 ```
 
-Today, every real run halts at Semantic Extraction with a `STAGE_NOT_IMPLEMENTED`
-`fatal_failure` — that is correct, expected behavior for this volume, not a
-bug. The `ExecutionReport` still shows Upload, CSV Parsing, and Normalization
-completing successfully with real metadata, which is how this stage of the
-pipeline is verified without an AI provider.
+Today, every real run through `createPipelineRunner()` halts at Validation
+with a `STAGE_NOT_IMPLEMENTED` `fatal_failure` — that is correct, expected
+behavior until the validation & trust engine volume lands, not a bug. The
+`ExecutionReport` shows Upload, CSV Parsing, Normalization, and Semantic
+Extraction completing successfully with real metadata (including a full
+`AIExecutionReport` on `context.sharedState`, readable via
+`ai/shared-state.ts`'s `readAIExecutionReport()`), which is how the AI stage
+is verified without going through Validation. `POST /ai/extract`
+(`apps/api/src/modules/ai/`) exists specifically to exercise Semantic
+Extraction over HTTP without needing Validation to succeed.
 
 ## Context flow
 
@@ -145,7 +164,7 @@ data problem, so it is non-operational and never exposed to a client as-is.
 | Upload              | `RawUploadInput`           | `UploadContext`            | Real — verifies the request, wraps it as `UploadedFile`                                        |
 | CSV Parsing         | `UploadContext`            | `ParsedDataset`            | Real — delimiter detection, quote-aware tokenizing, header disambiguation, ragged-row recovery |
 | Normalization       | `ParsedDataset`            | `NormalizedDataset`        | Real — whitespace, empty-token, Unicode/encoding cleanup                                       |
-| Semantic Extraction | `NormalizedDataset`        | `SemanticExtractionResult` | Placeholder — AI core volume                                                                   |
+| Semantic Extraction | `NormalizedDataset`        | `SemanticExtractionResult` | Real — delegates to an injected `AIOrchestrator` (`apps/api/src/ai/`)                          |
 | Validation          | `SemanticExtractionResult` | `ValidationResult`         | Placeholder — validation & trust engine volume                                                 |
 | Aggregation         | `ValidationResult`         | `ImportSummary`            | Placeholder — statistics/aggregation volume                                                    |
 
@@ -168,12 +187,16 @@ touching the runner or any other stage.
 
 ## Not implemented in this volume
 
-Per scope: no AI calls, no prompt engineering, no business rules, no CRM
-mapping, no batching, no retry logic. `StageOutcome` reserves
+Per scope: no business rule validation, no CRM-mapping confidence/trust
+scoring, no statistics aggregation. `StageOutcome` reserves
 `recoverable_failure` for a future retry-aware runner, but today the runner
 treats it identically to `fatal_failure` (halt) — see the comment on
-`StageOutcome` in `contracts/stage-result.ts`. The pipeline is also not wired
-to any HTTP route yet; `apps/api/src/modules/{upload,preview,import}` remain
-the Volume 1 placeholders untouched. Wiring `POST /preview` to
-`createPipelineRunner()` is a natural next step in a future volume, once
-Semantic Extraction has a real implementation worth exposing.
+`StageOutcome` in `contracts/stage-result.ts`; the AI Orchestration Platform
+likewise attempts each provider call once (no retry loop) per its own scope
+this volume. `createPipelineRunner()` is also not wired to `POST /import`
+yet — `apps/api/src/modules/import` remains the Volume 1 placeholder.
+`POST /preview` (Upload + CSV Parsing + Normalization) and `POST /ai/extract`
+(the same plus Semantic Extraction) both call the individual stage classes
+directly rather than through `PipelineRunner`, because `PipelineRunner`'s
+fixed six-stage sequence would halt at Validation before either endpoint
+could return a response.

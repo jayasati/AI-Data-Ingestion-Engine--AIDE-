@@ -19,11 +19,13 @@ apps/
     src/components/       ui/ (Button, Card, Badge, Modal, Table, Spinner, Skeleton, Toast)
                           layout/ (Navbar, Footer), error boundary
     src/features/         import/ (upload area, import workflow, preview + normalization
-                          results), settings/
+                          results, AI extraction summary — user-triggered diagnostic call
+                          to POST /ai/extract), settings/
     src/providers/        ThemeProvider (light/dark/system), ToastProvider
     src/hooks/            useTheme, useToast, ...
     src/services/         api-client.ts — typed fetch over the shared ApiResponse envelope;
-                          preview-client.ts — multipart POST to /preview
+                          preview-client.ts — multipart POST to /preview;
+                          ai-extract-client.ts — multipart POST to /ai/extract
     src/config/           Environment access (NEXT_PUBLIC_API_URL), app constants
     src/lib/              Framework-free utilities
 
@@ -37,8 +39,16 @@ apps/
     src/middleware/       request-id, request-logger, error-handler (maps MulterError too), not-found
     src/modules/          health/ (real), upload/ (metadata-only placeholder),
                           preview/ (real — multer + CSV Ingestion Engine + Normalization
-                          Engine, see below), import/ (placeholder).
-                          ai/, validation/, execution/ (reserved).
+                          Engine, see below), ai/ (real — POST /ai/extract diagnostic
+                          endpoint, runs Upload/CSV Parsing/Normalization/Semantic
+                          Extraction directly, see src/ai/README.md), import/ (placeholder).
+                          validation/, execution/ (reserved).
+    src/ai/                The AI Orchestration Platform — multi-provider LLM
+                          execution layer (OpenAI/Gemini/Claude/Mock). Dataset
+                          Context Builder, Prompt Compiler + 7-section template
+                          engine + few-shot example registry, Response Parser,
+                          structural Schema Validator, AIOrchestrator. See
+                          src/ai/README.md.
     src/types/            Express type augmentation (requestId)
     src/pipeline/         The processing engine — see src/pipeline/README.md.
                           domain/ (entities), contracts/ (StageResult, PipelineStage),
@@ -49,8 +59,10 @@ apps/
                           stages/normalization (real, rule-engine-based — see
                           src/pipeline/stages/normalization/README.md: 10 rule modules,
                           FieldNormalizationEngine, NormalizationReport),
-                          stages/{semantic-extraction,validation,aggregation}
-                          (placeholders), runner/ (PipelineRunner, not yet wired to HTTP),
+                          stages/semantic-extraction (real — delegates to an injected
+                          AIOrchestrator, see src/ai/README.md),
+                          stages/{validation,aggregation} (placeholders),
+                          runner/ (PipelineRunner, not yet wired to HTTP),
                           ingestion/ (CSV Ingestion Engine — see src/pipeline/ingestion/
                           README.md: header engine, column profiler, dataset profiler,
                           dataset intelligence, preview generator, normalization summary.
@@ -61,7 +73,10 @@ packages/
   shared-types/           Wire contracts shared by web + api: ApiResponse envelope,
                           UploadRequest/Response, ImportStatus, ResultSummary,
                           HealthResponse, DatasetPreviewResponse (profile/metadata DTOs +
-                          NormalizationSummaryDTO). The canonical CRM record schema lands here.
+                          NormalizationSummaryDTO), AIExtractResponse (ExtractedRecordDTO[]
+                          against the 15-field CRM schema + AIExecutionReportDTO — provider,
+                          model, tokens, cost estimate, status, warnings; never the compiled
+                          prompt or raw provider response text).
   validation/             Deterministic validation & trust engine (future phase)
   prompt/                 Prompt composition, versioning & registry (future phase)
 
@@ -83,23 +98,24 @@ docs/                     Architecture & engineering handbook (20 chapters)
 
 ## API surface
 
-| Method | Path          | Status      | Purpose                                                                                            |
-| ------ | ------------- | ----------- | -------------------------------------------------------------------------------------------------- |
-| GET    | `/health`     | Implemented | Service status, version, uptime                                                                    |
-| POST   | `/upload`     | Placeholder | Accept CSV upload metadata (JSON only, no file bytes)                                              |
-| POST   | `/preview`    | Implemented | `multipart/form-data` (field `file`) → CSV Ingestion Engine + Normalization Engine results (no AI) |
-| POST   | `/import`     | Placeholder | Run the AI import pipeline                                                                         |
-| GET    | `/import/:id` | Placeholder | Poll import status / result summary                                                                |
+| Method | Path          | Status      | Purpose                                                                                                                                                                                                  |
+| ------ | ------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/health`     | Implemented | Service status, version, uptime                                                                                                                                                                          |
+| POST   | `/upload`     | Placeholder | Accept CSV upload metadata (JSON only, no file bytes)                                                                                                                                                    |
+| POST   | `/preview`    | Implemented | `multipart/form-data` (field `file`) → CSV Ingestion Engine + Normalization Engine results (no AI)                                                                                                       |
+| POST   | `/ai/extract` | Implemented | `multipart/form-data` (field `file`) → runs Upload/CSV Parsing/Normalization/Semantic Extraction and returns extracted CRM-field records + an `AIExecutionReport` (diagnostic; not the full import flow) |
+| POST   | `/import`     | Placeholder | Run the AI import pipeline                                                                                                                                                                               |
+| GET    | `/import/:id` | Placeholder | Poll import status / result summary                                                                                                                                                                      |
 
 ## Roadmap
 
-| Phase    | Scope                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1 (done) | Monorepo foundation: apps, shared types, tooling, placeholder endpoints                                                                                                                                                                                                                                                                                                                                                  |
-| 2 (done) | Pipeline architecture: domain models, stage contracts, `PipelineContext` + state machine, event system, `PipelineRunner`, and real Upload/CSV Parsing/Normalization stages (Normalization was structural-only in this phase). Semantic Extraction, Validation, Aggregation are typed placeholders. Not yet wired to HTTP.                                                                                                |
-| 3 (done) | CSV Ingestion Engine: File Inspection (BOM/encoding), Header Engine, Column Profiler, Dataset Profiler (structural quality score), Dataset Intelligence (AI-free type hints), Preview Generator. Real `POST /preview` (multer, UTF-8/UTF-16 decoding). See `apps/api/src/pipeline/ingestion/README.md`.                                                                                                                  |
-| 4 (done) | Data Normalization Engine: rule-engine architecture (10 independent rule modules — Unicode, Whitespace, Null, Email, Phone, Date, Number, Boolean, Text, Location), `FieldNormalizationEngine`, per-field metadata + confidence, dataset-level `NormalizationReport`. `POST /preview` now also runs Normalization and returns a health score + field issues. See `apps/api/src/pipeline/stages/normalization/README.md`. |
-| 5        | AI core: replace the Semantic Extraction placeholder with a provider adapter (OpenAI default), token-aware batching, 6-layer prompt, JSON repair/retry                                                                                                                                                                                                                                                                   |
-| 5.5      | Validation & trust engine: replace the Validation placeholder — schema/field/business-rule checks, confidence scoring                                                                                                                                                                                                                                                                                                    |
-| 6        | Frontend workflow: state-machine driven Upload → Preview → Confirm → Progress → Results; wire `POST /import` to `createPipelineRunner()`                                                                                                                                                                                                                                                                                 |
-| 7        | Ship: Docker, CI, deployment (Vercel + Railway), README polish                                                                                                                                                                                                                                                                                                                                                           |
+| Phase    | Scope                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1 (done) | Monorepo foundation: apps, shared types, tooling, placeholder endpoints                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 2 (done) | Pipeline architecture: domain models, stage contracts, `PipelineContext` + state machine, event system, `PipelineRunner`, and real Upload/CSV Parsing/Normalization stages (Normalization was structural-only in this phase). Semantic Extraction, Validation, Aggregation are typed placeholders. Not yet wired to HTTP.                                                                                                                                                                                                                                                                                                                                                                                                |
+| 3 (done) | CSV Ingestion Engine: File Inspection (BOM/encoding), Header Engine, Column Profiler, Dataset Profiler (structural quality score), Dataset Intelligence (AI-free type hints), Preview Generator. Real `POST /preview` (multer, UTF-8/UTF-16 decoding). See `apps/api/src/pipeline/ingestion/README.md`.                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 4 (done) | Data Normalization Engine: rule-engine architecture (10 independent rule modules — Unicode, Whitespace, Null, Email, Phone, Date, Number, Boolean, Text, Location), `FieldNormalizationEngine`, per-field metadata + confidence, dataset-level `NormalizationReport`. `POST /preview` now also runs Normalization and returns a health score + field issues. See `apps/api/src/pipeline/stages/normalization/README.md`.                                                                                                                                                                                                                                                                                                 |
+| 5 (done) | AI Orchestration Platform: replaced the Semantic Extraction placeholder with a real, multi-provider AI execution layer (OpenAI/Gemini/Claude/Mock, config-selected), a 7-section prompt template engine + compiler + 7-category few-shot example registry, a response parser (markdown/prose stripping, never repairs invalid JSON), structural schema validation against the 15-field CRM schema, and an `AIOrchestrator` producing a full `AIExecutionReport` (tokens, cost estimate, timing, status). New diagnostic endpoint `POST /ai/extract`. No retry engine, no parallel batching, no business-rule validation, no confidence scoring — interfaces reserved for later volumes. See `apps/api/src/ai/README.md`. |
+| 5.5      | Validation & trust engine: replace the Validation placeholder — schema/field/business-rule checks, confidence scoring                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 6        | Frontend workflow: state-machine driven Upload → Preview → Confirm → Progress → Results; wire `POST /import` to `createPipelineRunner()`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 7        | Ship: Docker, CI, deployment (Vercel + Railway), README polish                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |

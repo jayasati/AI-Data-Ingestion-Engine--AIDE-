@@ -22,7 +22,9 @@ src/
     upload/      POST /upload          — placeholder; multipart + file validation later.
     preview/     POST /preview         — placeholder; deterministic CSV preview later (AI-free).
     import/      POST /import, GET /import/:id — placeholder; dispatches to execution later.
-    ai/          Reserved: provider adapter, batching, prompt assembly, JSON repair.
+    ai/          POST /ai/extract     — diagnostic endpoint for the AI Orchestration
+                 Platform (src/ai/); Upload/CSV Parsing/Normalization/Semantic
+                 Extraction, real multi-provider AI call (OpenAI/Gemini/Claude/Mock).
     validation/  Reserved: schema/field/business-rule validation of AI output.
     execution/   Reserved: lifecycle state machine, worker pool, retries, progress.
   types/         Express Request augmentation (requestId, startedAt).
