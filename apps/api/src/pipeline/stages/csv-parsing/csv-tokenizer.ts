@@ -43,8 +43,15 @@ export function* iterateCsvRecords(content: string, delimiter: string): Generato
       continue;
     }
 
-    if (char === '"' && field === "") {
+    if (char === '"' && /^[ \t]*$/.test(field)) {
+      // Real-world exports commonly write ", "value, with a comma" ," with a
+      // space after the delimiter before the opening quote. Strict RFC 4180
+      // requires the quote to be the field's first character; being lenient
+      // here (discarding only leading horizontal whitespace) matches how
+      // Excel and most spreadsheet tools actually read such files, and
+      // avoids silently splitting a quoted value's embedded delimiter.
       insideQuotes = true;
+      field = "";
       i += 1;
       continue;
     }
